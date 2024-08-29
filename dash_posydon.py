@@ -15,7 +15,7 @@ from dash.exceptions import PreventUpdate
 
 import plotly.graph_objects as go
 from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values
-from ssh_io import download_data_to_df, get_comparison_data
+from ssh_io import download_data_to_df
 
 # some globals
 q_range = np.arange(0.05, 1.05, 0.05)
@@ -30,8 +30,10 @@ class MESA_model:
 
     def load_data(self, mesa_dir):
         self.mesa_dir = mesa_dir
-        self.s1_df, self.s2_df, self.bdf = download_data_to_df(mesa_dir)
-        self.s1_compare_df, self.s2_compare_df, self.compare_bdf, self.alt_tf1 = get_comparison_data(mesa_dir, compare_dir)
+        self.s1_df, self.s2_df, self.bdf, self.tf1 = download_data_to_df(mesa_dir)
+        self.s1_compare_df, self.s2_compare_df, self.compare_bdf, self.alt_tf1 = download_data_to_df(mesa_dir, compare_dir)
+
+        print(self.s1_compare_df, self.s2_compare_df)
 
 mesa_model = MESA_model(compare_dir)
 
@@ -234,7 +236,6 @@ def load_and_plot_click_data_sec(star2_y, star2_x):
 )
 def load_and_plot_click_data_bin(bin_x, bin_y, log_options):
 
-    print(log_options)
     if log_options:
         xaxis_type = 'log' if 'log-x' in log_options else 'linear'
         yaxis_type = 'log' if 'log-y' in log_options else 'linear'
@@ -276,4 +277,4 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options):
 
 if __name__ == "__main__":
     # Run the app
-    app.run(debug=True)
+    app.run(port=8080, debug=True)

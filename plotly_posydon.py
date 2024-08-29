@@ -49,7 +49,8 @@ def dash_plot2D(q, iv, fv):
     f.for_each_trace(lambda t: t.update(name = marker_settings[t.name][3], 
                                         marker = dict(size = 6, symbol=symbol_map[marker_settings[t.name][0]],
                                                       color=color_convert(marker_settings[t.name][2]), 
-                                                      line=dict(color='black', width=0.1)) ) )
+                                                      line=dict(color='black', width=0.1)), 
+                                        legendgroup= marker_settings[t.name][3]) )
     
     f.update_layout(template='simple_white',
                     xaxis_title="log<sub>10</sub> M<sub>1</sub>/M<sub>&#8857;</sub>", 

@@ -18,104 +18,73 @@ def ssh_connect():
 
     return ssh_client
 
-def download_data_to_df(remote_path):
+def download_data_to_df(original_remote_path, alt_parent_dir=None):
+
+    # open clients
     ssh_client = ssh_connect()
-    ftp_client=ssh_client.open_sftp()
+    ftp_client = ssh_client.open_sftp()
 
-    parent_dir = "/" + os.path.join(*remote_path.split('/')[:-1])
-    base_run_dir = remote_path.split('/')[-1].split("index_")[0]
+    # (remote) parent dir of directory stored in grid and base run name (w/o grid index)
+    parent_dir = "/" + os.path.join(*original_remote_path.split('/')[:-1])
+    base_run_dir = original_remote_path.split('/')[-1].split("index_")[0]
 
-    command = 'ls -d {:s}/{:s}*'.format(parent_dir, base_run_dir)
+    if alt_parent_dir is None:
+        # command to list base run dir in parent dir
+        command = 'ls -d {:s}/{:s}*'.format(parent_dir, base_run_dir)
+        generic_h1_name = "history1"
+        generic_h2_name = "history2"
+        generic_bh_name = "binary_history"
+        generic_out_name = "out"
+    else:
+        # command to list base run dir in alternate parent dir for comparison
+        command = 'ls -d {:s}/{:s}*'.format(alt_parent_dir, base_run_dir)
+        generic_h1_name = "alt_history1"
+        generic_h2_name = "alt_history2"
+        generic_bh_name = "alt_binary_history"
+        generic_out_name = "alt_out"
+
+    # execute command and convert stdout
     stdin, stdout, stderr = ssh_client.exec_command(command)
     cmd_out = stdout.read().decode('utf-8').strip("\n")
+    # this is the path to the desired run
     path_to_run = cmd_out
     
+    # try to download history files and console output from the run
     try:
-        ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data.gz'), 'quest_mesa_store/alt_history1.data.gz')
-        ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data.gz'), 'quest_mesa_store/alt_history2.data.gz')
-        ftp_client.get(os.path.join(path_to_run, 'binary_history.data.gz'), 'quest_mesa_store/alt_binary_history.data.gz')
-        ftp_client.get(os.path.join(path_to_run, 'out.txt.gz'), 'quest_mesa_store/alt_out.txt.gz')
+        ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_h1_name))
+        ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_h2_name))
+        ftp_client.get(os.path.join(path_to_run, 'binary_history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_bh_name))
+        ftp_client.get(os.path.join(path_to_run, 'out.txt.gz'), 'quest_mesa_store/{:s}.txt.gz'.format(generic_out_name))
 
         ftp_client.close()
         ssh_client.close()
 
-        df1 = pd.read_csv("quest_mesa_store/alt_history1.data.gz", header=4, delimiter=r"\s+")
-        df2 = pd.read_csv("quest_mesa_store/alt_history2.data.gz", header=4, delimiter=r"\s+")
-        bdf = pd.read_csv("quest_mesa_store/alt_binary_history.data.gz", header=4, delimiter=r"\s+")
+        df1 = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_h1_name), header=4, delimiter=r"\s+")
+        df2 = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_h2_name), header=4, delimiter=r"\s+")
+        bdf = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_bh_name), header=4, delimiter=r"\s+")
 
-        return df1, df2, bdf
+        return df1, df2, bdf, check_termcode_gz('quest_mesa_store/{:s}.txt.gz'.format(generic_out_name))
 
     except FileNotFoundError as e:
         pass
 
+    # if no gzipped files found, try looking for uncompressed
     try:
-        ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data'), 'quest_mesa_store/alt_history1.data')
-        ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data'), 'quest_mesa_store/alt_history2.data')
-        ftp_client.get(os.path.join(path_to_run, 'binary_history.data'), 'quest_mesa_store/alt_binary_history.data')
-        ftp_client.get(os.path.join(path_to_run, 'out.txt'), 'quest_mesa_store/alt_out.txt')
+        ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data'), 'quest_mesa_store/{:s}.data'.format(generic_h1_name))
+        ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data'), 'quest_mesa_store/{:s}.data'.format(generic_h2_name))
+        ftp_client.get(os.path.join(path_to_run, 'binary_history.data'), 'quest_mesa_store/{:s}.data'.format(generic_bh_name))
+        ftp_client.get(os.path.join(path_to_run, 'out.txt'), 'quest_mesa_store/{:s}.txt'.format(generic_out_name))
 
         ftp_client.close()
         ssh_client.close()
 
-        df1 = pd.read_csv("quest_mesa_store/alt_history1.data", header=4, delimiter=r"\s+")
-        df2 = pd.read_csv("quest_mesa_store/alt_history2.data", header=4, delimiter=r"\s+")
-        bdf = pd.read_csv("quest_mesa_store/alt_binary_history.data", header=4, delimiter=r"\s+")
+        df1 = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_h1_name), header=4, delimiter=r"\s+")
+        df2 = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_h2_name), header=4, delimiter=r"\s+")
+        bdf = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_bh_name), header=4, delimiter=r"\s+")
 
-        return df1, df2, bdf
+        return df1, df2, bdf, check_termcode('quest_mesa_store/{:s}.txt'.format(generic_out_name))
 
-    except FileNotFoundError as e:
-        ftp_client.close()
-        ssh_client.close()
-
-        return None, None, None
-    
-    
-
-def get_comparison_data(remote_mesa_dir, remote_compare_dir):
-
-    ssh_client = ssh_connect()
-    ftp_client=ssh_client.open_sftp()
-
-    base_run_dir = remote_mesa_dir.split('/')[-1].split("index_")[0]
-
-    command = 'ls -d {:s}/{:s}*'.format(remote_compare_dir, base_run_dir)
-    stdin, stdout, stderr = ssh_client.exec_command(command)
-    cmd_out = stdout.read().decode('utf-8').strip("\n")
-    path_to_run = cmd_out
-    
-    try:
-        ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data.gz'), 'quest_mesa_store/alt_history1.data.gz')
-        ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data.gz'), 'quest_mesa_store/alt_history2.data.gz')
-        ftp_client.get(os.path.join(path_to_run, 'binary_history.data.gz'), 'quest_mesa_store/alt_binary_history.data.gz')
-        ftp_client.get(os.path.join(path_to_run, 'out.txt.gz'), 'quest_mesa_store/alt_out.txt.gz')
-
-        ftp_client.close()
-        ssh_client.close()
-
-        df1 = pd.read_csv("quest_mesa_store/alt_history1.data.gz", header=4, delimiter=r"\s+")
-        df2 = pd.read_csv("quest_mesa_store/alt_history2.data.gz", header=4, delimiter=r"\s+")
-        bdf = pd.read_csv("quest_mesa_store/alt_binary_history.data.gz", header=4, delimiter=r"\s+")
-
-        return df1, df2, bdf, check_termcode_gz('quest_mesa_store/alt_out.txt.gz')
-
-    except FileNotFoundError as e:
-        pass
-
-    try:
-        ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data'), 'quest_mesa_store/alt_history1.data')
-        ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data'), 'quest_mesa_store/alt_history2.data')
-        ftp_client.get(os.path.join(path_to_run, 'binary_history.data'), 'quest_mesa_store/alt_binary_history.data')
-        ftp_client.get(os.path.join(path_to_run, 'out.txt'), 'quest_mesa_store/alt_out.txt')
-
-        ftp_client.close()
-        ssh_client.close()
-
-        df1 = pd.read_csv("quest_mesa_store/alt_history1.data", header=4, delimiter=r"\s+")
-        df2 = pd.read_csv("quest_mesa_store/alt_history2.data", header=4, delimiter=r"\s+")
-        bdf = pd.read_csv("quest_mesa_store/alt_binary_history.data", header=4, delimiter=r"\s+")
-
-        return df1, df2, bdf, check_termcode('quest_mesa_store/alt_out.txt')
-
+    # nothing found
     except FileNotFoundError as e:
         ftp_client.close()
         ssh_client.close()
