@@ -2,6 +2,8 @@ import os
 import paramiko
 import pandas as pd
 import gzip
+import numpy as np
+from posydon.grids.termination_flags import get_flag_from_MESA_output
 
 def ssh_connect():
     
@@ -27,6 +29,7 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
     # (remote) parent dir of directory stored in grid and base run name (w/o grid index)
     parent_dir = "/" + os.path.join(*original_remote_path.split('/')[:-1])
     base_run_dir = original_remote_path.split('/')[-1].split("index_")[0]
+    grid_index = original_remote_path.split('/')[-1].split("index_")[-1]
 
     if alt_parent_dir is None:
         # command to list base run dir in parent dir
@@ -62,10 +65,11 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
         df1 = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_h1_name), header=4, delimiter=r"\s+")
         df2 = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_h2_name), header=4, delimiter=r"\s+")
         bdf = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_bh_name), header=4, delimiter=r"\s+")
-
-        return df1, df2, bdf, check_termcode_gz('quest_mesa_store/{:s}.txt.gz'.format(generic_out_name))
+        
+        return df1, df2, bdf, get_flag_from_MESA_output('quest_mesa_store/{:s}.txt.gz'.format(generic_out_name))
 
     except FileNotFoundError as e:
+
         pass
 
     # if no gzipped files found, try looking for uncompressed
@@ -82,7 +86,7 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
         df2 = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_h2_name), header=4, delimiter=r"\s+")
         bdf = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_bh_name), header=4, delimiter=r"\s+")
 
-        return df1, df2, bdf, check_termcode('quest_mesa_store/{:s}.txt'.format(generic_out_name))
+        return df1, df2, bdf, get_flag_from_MESA_output('quest_mesa_store/{:s}.txt'.format(generic_out_name))
 
     # nothing found
     except FileNotFoundError as e:
@@ -91,150 +95,94 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
 
         return None, None, None, None
     
+def available_comparison(original_remote_paths, alt_parent_dir):
 
-def check_termcode(file_name, simple=False):
-    
-    # check out.txt
-    with open(file_name, 'r') as openf:
-        
-        lines = openf.readlines()
-        
-        for line in lines[::-1]:    
-            if "termination" in line:
-                if "Both stars" in line:
-                    if simple:
-                        return True
-                    else:
-                        return "Both stars RLOF"
-                elif "overflow from L2" in line:
-                    if simple:
-                        return True
-                    else:
-                        return "L2 RLOF"
-                elif "L2 overflow during case A" in line:
-                    if simple:
-                        return True
-                    else:
-                        return "Case A L2 RLOF"
-                elif "maximum mass transfer rate" in line:
-                    if simple:
-                        return True
-                    else:
-                        return "Max MT rate"
-                else:
-                    if simple:
-                        return True
-                    else:
-                        return line.split("code: ")[-1].strip('\n')
+    availability_list = []
+    success_list = []
 
-    """ 
-    #print("No termination code found in out.txt")
-    run_index = file_name.split("_")[-1]
-    
-    
-    parent_path = os.path.dirname(file_name)
-    mesa_grid_files = glob(parent_path + "/mesa_grid.*")
-    
-    for mesa_grid_fn in mesa_grid_files:
-        if run_index in mesa_grid_fn:
-            with open(mesa_grid_fn, "r") as openf:
-                lines = openf.readlines()
+    # open clients
+    ssh_client = ssh_connect()
+    ftp_client = ssh_client.open_sftp()
+
+    command = 'ls -d {:s}/Zbase_*'.format(alt_parent_dir)
+    # execute command and convert stdout
+    stdin, stdout, stderr = ssh_client.exec_command(command)
+    cmd_out = stdout.read().decode('utf-8').split("\n")
+
+    for mesa_dir in original_remote_paths:
+        base_run_dir = mesa_dir.split('/')[-1].split("index_")[0]
+        exists = np.array([base_run_dir in alt_dir for alt_dir in cmd_out])
+        if any(exists):
+            path_to_run = cmd_out[np.where(exists)[0][0]]
+            try:
+                ftp_client.get(os.path.join(path_to_run, 'out.txt.gz'), 'quest_mesa_store/tmp_out.txt.gz')
+                available = True
                 
-            break
-    
-    if "TIME LIMIT" in "".join(lines):
-        if simple:
-            return False
-        else:
-            return "CPU Wall Time"
-    elif "Segmentation fault" in "".join(lines):
-        if simple:
-            return False
-        else:
-            return "Segmentation fault"
-    #elif "No such file or directory" in "".join(lines):
-    #    if simple:
-    #        return False
-    #    else:
-            #return "rm: cannot remove \'LOGS*/profile*\': No such file or directory"
-    #        return "File I/O error"
-    """
-    if simple:
-        return False
-    else:
-        return "Unknown"
+                termination_flag = get_flag_from_MESA_output('quest_mesa_store/tmp_out.txt.gz')
+                success = True if (("min_timestep" not in termination_flag) & ("timelimit" not in termination_flag)) else False
 
-def check_termcode_gz(file_name, simple=False):
-    
-    # check out.txt
-    with gzip.open(file_name, 'rt') as openf:
+            except FileNotFoundError as e:
+
+                try:
+                    ftp_client.get(os.path.join(path_to_run, 'out.txt'), 'quest_mesa_store/tmp_out.txt')
+                    available = True
+
+                    termination_flag = get_flag_from_MESA_output('quest_mesa_store/tmp_out.txt')
+                    success = True if (("min_timestep" not in termination_flag) & ("timelimit" not in termination_flag)) else False
+
+                except FileNotFoundError as e:
+                    available = False
+                    success = False
+
+            availability_list.append(available)
+            success_list.append(success)
+        else:
+            availability_list.append(False)
+            success_list.append(False)
+
+    return availability_list, success_list
+
+
+    for original_remote_path in original_remote_paths:
+
+        available = False
+        success = False
+        # (remote) parent dir of directory stored in grid and base run name (w/o grid index)
+        base_run_dir = original_remote_path.split('/')[-1].split("index_")[0]
+
+
+        # this is the path to the desired run
+        path_to_run = cmd_out
         
-        lines = openf.readlines()
-        
-        for line in lines[::-1]:    
-            if "termination" in line:
-                if "Both stars" in line:
-                    if simple:
-                        return True
-                    else:
-                        return "Both stars RLOF"
-                elif "overflow from L2" in line:
-                    if simple:
-                        return True
-                    else:
-                        return "L2 RLOF"
-                elif "L2 overflow during case A" in line:
-                    if simple:
-                        return True
-                    else:
-                        return "Case A L2 RLOF"
-                elif "maximum mass transfer rate" in line:
-                    if simple:
-                        return True
-                    else:
-                        return "Max MT rate"
-                else:
-                    if simple:
-                        return True
-                    else:
-                        return line.split("code: ")[-1].strip('\n')
-                    
-    return "CPU Wall Time"
-    
-    """
-    #print("No termination code found in out.txt")
-    run_index = file_name.split("_")[-1]
-    
-    
-    parent_path = os.path.dirname(file_name)
-    mesa_grid_files = glob(parent_path + "/mesa_grid.*")
-    
-    for mesa_grid_fn in mesa_grid_files:
-        if run_index in mesa_grid_fn:
-            with open(mesa_grid_fn, "r") as openf:
-                lines = openf.readlines()
+        #print(path_to_run =="")
+        if path_to_run == "":
+            available = False
+            success = False
+        else:
+            try:
+                ftp_client.get(os.path.join(path_to_run, 'out.txt.gz'), 'quest_mesa_store/tmp_out.txt.gz')
+                available = True
                 
-            break
-    
-    if "TIME LIMIT" in "".join(lines):
-        if simple:
-            return False
-        else:
-            return "CPU Wall Time"
-    elif "Segmentation fault" in "".join(lines):
-        if simple:
-            return False
-        else:
-            return "Segmentation fault"
-    #elif "No such file or directory" in "".join(lines):
-    #    if simple:
-    #        return False
-    #    else:
-            #return "rm: cannot remove \'LOGS*/profile*\': No such file or directory"
-    #        return "File I/O error"
-    """
-    if simple:
-        return False
-    else:
-        return "Unknown"
-    
+                termination_flag = get_flag_from_MESA_output('quest_mesa_store/tmp_out.txt.gz')
+                success = True if (("min_timestep" not in termination_flag) & ("timelimit" not in termination_flag)) else False
+
+            except FileNotFoundError as e:
+
+                try:
+                    ftp_client.get(os.path.join(path_to_run, 'out.txt'), 'quest_mesa_store/tmp_out.txt')
+                    available = True
+
+                    termination_flag = get_flag_from_MESA_output('quest_mesa_store/tmp_out.txt')
+                    success = True if (("min_timestep" not in termination_flag) & ("timelimit" not in termination_flag)) else False
+
+                except FileNotFoundError as e:
+                    available = False
+                    success = False
+        
+        availability_list.append(available)
+        success_list.append(success)
+
+    ftp_client.close()
+    ssh_client.close()
+
+    return availability_list, success_list

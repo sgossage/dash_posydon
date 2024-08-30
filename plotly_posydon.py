@@ -6,7 +6,7 @@ from posydon.visualization.plot_defaults import (
     PLOT_PROPERTIES, DEFAULT_LABELS)
 
 import plotly.express as px
-from ssh_io import download_data_to_df
+from ssh_io import available_comparison
 
 marker_settings = DEFAULT_MARKERS_COLORS_LEGENDS['combined_TF12']
 symbol_map = {'D': 'diamond', 's': 'square', '.': 'circle', 'x': 'x'}
@@ -33,7 +33,7 @@ def get_IF_values(grid_path):
 
     return iv, fv
 
-def dash_plot2D(q, iv, fv):
+def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True):
     
     TF12 = combine_TF12(fv['interpolation_class'], fv['termination_flag_2'])
     cut = (iv['star_2_mass']/iv['star_1_mass'] < q+0.025) & (iv['star_2_mass']/iv['star_1_mass'] > q-0.025)
@@ -64,6 +64,21 @@ def dash_plot2D(q, iv, fv):
         lambda trace:
             trace.update(showlegend=False)
             if (trace.name in names) else names.add(trace.name))
+    
+    if highlight_comparisons:
+        availability_list, success_list = available_comparison(iv[cut]['mesa_dir'], compare_dir)
+
+        for i, available in enumerate(availability_list):
+            if available:
+                if success_list[i]:
+                    marker_color = 'green'
+                else:
+                    marker_color = 'red'       
+                # highlight selected point on grid plot
+                f.add_trace(px.scatter(x=[iv[cut]['star_1_mass'].iloc[i]], y=[iv[cut]['period_days'].iloc[i]]).update_traces(
+                        marker=dict(color=marker_color, symbol='square-open', size=10, 
+                        line=dict(color=marker_color,width=3)
+                        ), hoverinfo='skip', hovertemplate=None).data[0])
 
     return f
 

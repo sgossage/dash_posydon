@@ -7,6 +7,7 @@ from posydon.visualization.plot_defaults import (
     DEFAULT_MARKERS_COLORS_LEGENDS, add_flag_to_MARKERS_COLORS_LEGENDS,
     PLOT_PROPERTIES, DEFAULT_LABELS)
 from collections import Counter
+import dash_daq as daq
 
 from dash import Dash, html, dcc, callback, Output, Input
 import pandas as pd
@@ -20,20 +21,19 @@ from ssh_io import download_data_to_df
 # some globals
 q_range = np.arange(0.05, 1.05, 0.05)
 gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e+00_Zsun/LITE/grid_low_res_combined_rerun6b_LBV_wind+dedt_energy_eqn.h5"
-compare_dir = "/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5"
+compare_dir = ""#"/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5"
 iv, fv = get_IF_values(gpath)
 
 class MESA_model:
     def __init__(self, compare_dir=None):
         self.mesa_dir = ""
-        self.compare_dir = ""
+        self.compare_dir = compare_dir
 
     def load_data(self, mesa_dir):
         self.mesa_dir = mesa_dir
         self.s1_df, self.s2_df, self.bdf, self.tf1 = download_data_to_df(mesa_dir)
-        self.s1_compare_df, self.s2_compare_df, self.compare_bdf, self.alt_tf1 = download_data_to_df(mesa_dir, compare_dir)
+        self.s1_compare_df, self.s2_compare_df, self.compare_bdf, self.alt_tf1 = download_data_to_df(mesa_dir, self.compare_dir)
 
-        print(self.s1_compare_df, self.s2_compare_df)
 
 mesa_model = MESA_model(compare_dir)
 
@@ -42,7 +42,9 @@ app = Dash()
 
 # App layout
 app.layout = html.Div([
+                        # 1st row, grid slice and HRD
                         html.Div([
+                                            # slice slider
                                   html.Div([html.Div(dcc.Slider(
                                                        q_range.min(), 
                                                        q_range.max(), 
@@ -54,12 +56,22 @@ app.layout = html.Div([
                                                                 "always_visible": True,
                                                                 "template": "q = {value}",
                                                                 "style": {"color": "LightSteelBlue", "fontSize": "20px"}}), 
-                                                       style={'width': '50%', 'padding-left':'15%', 'padding-right':'25%', 'padding-top':'5%'}), 
-                                            dcc.Graph(id='grid-slice-graph')]),
-
-                                  html.Div([dcc.Loading(
-                                              id = "evo-loading", type = 'cube', 
-                                              children=[html.Div(dcc.Graph(id='hrd-graph', figure={"layout":{"height":800, "width":1200}}))])])
+                                                       style={'width': '50%', 'padding-left':'15%', 'padding-right':'25%', 'padding-top':'5%'}),
+                                                    html.Div([dcc.Input(id='input-comp-dir', type='text'),
+                                                              daq.ToggleSwitch( id='comparison-toggle', value=False, size=30)], 
+                                                              style={"display":"flex", 'padding-left':'80%'}),
+                                                    # slice plot                     
+                                                    dcc.Loading(
+                                                      id = "slice-loading", type = 'cube',
+                                                      children=[html.Div(dcc.Graph(id='grid-slice-graph', figure={"layout":{"height":800, "width":1200}}) )]
+                                                      )
+                                            ]),
+                                    # HRD plot
+                                    html.Div([dcc.Loading(
+                                                id = "evo-loading", type = 'cube', 
+                                                children=[html.Div(dcc.Graph(id='hrd-graph', figure={"layout":{"height":800, "width":1200}}))]
+                                                )
+                                          ])
                                  ], 
                                  style={"display":"flex", "gap":"5px", "align-items":"flex-end"}),
                         # 2nd row of time series plots
@@ -87,12 +99,12 @@ app.layout = html.Div([
 @callback(
     Output('grid-slice-graph', 'figure'),
     Input('grid-slice-slider', 'value'),
-    
+    Input('comparison-toggle', 'value')
 )
-def update_slice_graph(q):
+def update_slice_graph(q, toggle_value):
 
     # plot grid plot for selected q
-    f = dash_plot2D(q, iv, fv)
+    f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value)
     return f
 
 # Highlight model clicked on in grid slice plot
@@ -100,12 +112,13 @@ def update_slice_graph(q):
     Output('grid-slice-graph', 'figure', allow_duplicate=True),
     Input('grid-slice-slider', 'value'),
     Input('grid-slice-graph', 'clickData'),
+    Input('comparison-toggle', 'value'),
     prevent_initial_call=True
 )
-def highlight_on_click(q, clickData):
+def highlight_on_click(q, clickData, toggle_value):
 
     if clickData:
-        f = dash_plot2D(q, iv, fv)
+        f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value)
         porbi = clickData["points"][0]["y"]
         mdi = clickData["points"][0]["x"]
 
@@ -113,7 +126,7 @@ def highlight_on_click(q, clickData):
         f.add_trace(px.scatter(x=[float(mdi)], y=[float(porbi)]).update_traces(
                     marker=dict(color='LightSkyBlue', symbol='square-open', size=20, 
                     line=dict(color='MediumPurple',width=6)
-                    )).data[0])
+                    ), hoverinfo='skip', hovertemplate=None).data[0])
         
         return f
     else:
@@ -132,8 +145,10 @@ def highlight_on_click(q, clickData):
 def load_and_plot_click_data(clickData):
     
     if clickData:
-
-        mesa_dir = clickData["points"][0]["customdata"][1]
+        try:
+            mesa_dir = clickData["points"][0]["customdata"][1]
+        except KeyError as e:
+            raise PreventUpdate
         mesa_model.load_data(mesa_dir)
 
         if mesa_model.s1_df is not None:
@@ -161,7 +176,8 @@ def load_and_plot_click_data(clickData):
         
     else:
         raise PreventUpdate
-    
+
+# update star 1 time evo
 @callback(
     Output('star1-timeseries', 'figure'),
     Input('star1-dropdown', 'value'),
@@ -194,7 +210,8 @@ def load_and_plot_click_data_pri(star1_y, star1_x):
         
     else:
         raise PreventUpdate
-    
+
+# update star 2 time evo
 @callback(
     Output('star2-timeseries', 'figure'),
     Input('star2-dropdown', 'value'),
@@ -227,7 +244,8 @@ def load_and_plot_click_data_sec(star2_y, star2_x):
         
     else:
         raise PreventUpdate
-    
+
+# update binary time evo
 @callback(
     Output('binary-plot', 'figure'),
     Input('binary-x-dropdown', 'value'),
@@ -274,6 +292,35 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options):
         
     else:
         raise PreventUpdate
+    
+@callback(
+    Output('grid-slice-graph', 'figure', allow_duplicate=True),
+    Input('grid-slice-slider', 'value'),
+    Input('comparison-toggle', 'value'),
+    prevent_initial_call=True
+    
+)
+def highlight_comparisons(q, value):
+
+    if ((mesa_model.compare_dir is None) | (mesa_model.compare_dir == "")):
+        raise PreventUpdate
+    else:
+        f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=value)
+        return f
+
+# set compare dir
+@callback(
+    Output('comparison-toggle', 'value'),
+    Input('input-comp-dir', 'value'),
+    prevent_initial_call=True
+    
+)
+def set_compare_dir(value):
+
+    mesa_model.compare_dir = value
+    
+    return False
+
 
 if __name__ == "__main__":
     # Run the app
