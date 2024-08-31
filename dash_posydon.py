@@ -57,7 +57,8 @@ app.layout = html.Div([
                                                                 "template": "q = {value}",
                                                                 "style": {"color": "LightSteelBlue", "fontSize": "20px"}}), 
                                                        style={'width': '50%', 'padding-left':'15%', 'padding-right':'25%', 'padding-top':'5%'}),
-                                                    html.Div([dcc.Input(id='input-comp-dir', type='text'),
+                                                    html.Div([dcc.Input(id='input-comp-dir', type='text', 
+                                                              value='/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5'),
                                                               daq.ToggleSwitch( id='comparison-toggle', value=False, size=30)], 
                                                               style={"display":"flex", 'padding-left':'80%'}),
                                                     # slice plot                     
