@@ -9,7 +9,7 @@ from posydon.visualization.plot_defaults import (
 from collections import Counter
 import dash_daq as daq
 
-from dash import Dash, html, dcc, callback, Output, Input
+from dash import Dash, html, dcc, callback, Output, Input, State, ctx
 import pandas as pd
 import plotly.express as px
 from dash.exceptions import PreventUpdate
@@ -21,7 +21,7 @@ from ssh_io import download_data_to_df
 # some globals
 q_range = np.arange(0.05, 1.05, 0.05)
 gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e+00_Zsun/LITE/grid_low_res_combined_rerun6b_LBV_wind+dedt_energy_eqn.h5"
-compare_dir = ""#"/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5"
+compare_dir = ""
 iv, fv = get_IF_values(gpath)
 
 class MESA_model:
@@ -111,25 +111,32 @@ def update_slice_graph(q, toggle_value):
 # Highlight model clicked on in grid slice plot
 @callback(
     Output('grid-slice-graph', 'figure', allow_duplicate=True),
-    Input('grid-slice-slider', 'value'),
+    #Input('grid-slice-slider', 'value'),
     Input('grid-slice-graph', 'clickData'),
-    Input('comparison-toggle', 'value'),
+    #Input('comparison-toggle', 'value'),
+    #Input('grid-slice-graph', 'figure'),
+    State('grid-slice-graph', 'figure'),
     prevent_initial_call=True
 )
-def highlight_on_click(q, clickData, toggle_value):
+#def highlight_on_click(q, clickData, toggle_value, current_fig):
+def highlight_on_click(clickData, current_fig):
+
+    for i, trace in enumerate(current_fig['data']):
+        if 'name' in trace and trace['name'] == 'selected':
+            current_fig['data'][i].clear()
 
     if clickData:
-        f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value)
+        #f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value)
         porbi = clickData["points"][0]["y"]
         mdi = clickData["points"][0]["x"]
-
+        
         # highlight selected point on grid plot
-        f.add_trace(px.scatter(x=[float(mdi)], y=[float(porbi)]).update_traces(
+        current_fig['data'].append(px.scatter(x=[float(mdi)], y=[float(porbi)]).update_traces(
                     marker=dict(color='LightSkyBlue', symbol='square-open', size=20, 
                     line=dict(color='MediumPurple',width=6)
-                    ), hoverinfo='skip', hovertemplate=None).data[0])
+                    ), hoverinfo='skip', hovertemplate=None, name='selected').data[0])
         
-        return f
+        return current_fig #f
     else:
         raise PreventUpdate
 
@@ -159,6 +166,7 @@ def load_and_plot_click_data(clickData):
                                         mesa_model.s1_compare_df, mesa_model.s2_compare_df, mesa_model.alt_tf1)
             return f, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
         else:
+            # when no data (history) files are found...
             f = go.Figure()
             f.add_annotation(text='Data missing in {:s} <br>'.format("/".join(mesa_dir.split("/")[:-1])) +\
                                   'for run {:s}'.format(mesa_dir.split("/")[-1]), 
