@@ -176,9 +176,10 @@ def load_and_plot_HRD(clickData):
     Output('star1-timeseries', 'figure'),
     Input('star1-dropdown', 'value'),
     Input('star1-xaxis-type', 'value'),
-    Input('grid-slice-graph', 'clickData')
+    Input('star1-dropdown', 'options'),
+    prevent_initial_call = True
 )
-def load_and_plot_click_data_pri(star1_y, star1_x, clickData):
+def load_and_plot_click_data_pri(star1_y, star1_x, options):
     
     if star1_x == "log Age":
         star1_x = "star_age"
@@ -190,16 +191,16 @@ def load_and_plot_click_data_pri(star1_y, star1_x, clickData):
     if star1_y:
 
         f = px.line(mesa_model.s1_df, x=star1_x, y=star1_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 1', line_color='royalblue',
-                    hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
-        
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
+            
         # plot comparison tracks if provided
         if mesa_model.s1_compare_df is not None:
-             f.add_trace(px.line(mesa_model.s1_compare_df, x=star1_x, y=star1_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
-                         hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
-        
+            f.add_trace(px.line(mesa_model.s1_compare_df, x=star1_x, y=star1_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
+                            hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+            
         f.update_layout(template='simple_white',
-                        xaxis_type=xaxis_type,
-                        height=400, width=800)
+                            xaxis_type=xaxis_type,
+                            height=400, width=800)
 
         return f
         
@@ -211,9 +212,10 @@ def load_and_plot_click_data_pri(star1_y, star1_x, clickData):
     Output('star2-timeseries', 'figure'),
     Input('star2-dropdown', 'value'),
     Input('star2-xaxis-type', 'value'),
-    Input('grid-slice-graph', 'clickData')
+    Input('star2-dropdown', 'options'),
+    prevent_initial_call = True
 )
-def load_and_plot_click_data_sec(star2_y, star2_x, clickData):
+def load_and_plot_click_data_sec(star2_y, star2_x, options):
     
     if star2_x == "log Age":
         star2_x = "star_age"
@@ -247,9 +249,10 @@ def load_and_plot_click_data_sec(star2_y, star2_x, clickData):
     Input('binary-x-dropdown', 'value'),
     Input('binary-y-dropdown', 'value'),
     Input('binary-checklist', 'value'),
-    Input('grid-slice-graph', 'clickData')
+    Input('binary-x-dropdown', 'options'),
+    prevent_initial_call = True
 )
-def load_and_plot_click_data_bin(bin_x, bin_y, log_options, clickData):
+def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
 
     if log_options:
         xaxis_type = 'log' if 'log-x' in log_options else 'linear'
