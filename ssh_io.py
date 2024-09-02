@@ -93,7 +93,7 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
         ftp_client.close()
         ssh_client.close()
 
-        return None, None, None, None
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), ""
     
 def available_comparison(original_remote_paths, alt_parent_dir):
 

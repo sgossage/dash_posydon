@@ -6,6 +6,7 @@ from posydon.visualization.plot_defaults import (
     PLOT_PROPERTIES, DEFAULT_LABELS)
 
 import plotly.express as px
+import plotly.graph_objects as go
 from ssh_io import available_comparison
 
 marker_settings = DEFAULT_MARKERS_COLORS_LEGENDS['combined_TF12']
@@ -83,41 +84,55 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True):
     return f
 
 
-def HRD_on_click(clickData, df1, df2, compare_df1=None, compare_df2=None, compare_tf1=None):
-        # download/load data
-        porbi = clickData["points"][0]["y"]
-        mdi = clickData["points"][0]["x"]
-        mai = clickData["points"][0]["customdata"][0]
-        tf1 = clickData["points"][0]["customdata"][3]
-        if not compare_tf1:
-             compare_tf1 = "N/A"
+def HRD_on_click(mesa_model):
+        
+        if mesa_model.s1_df.empty:
+            # when no data (history) files are found...
+            f = go.Figure()
+            f.add_annotation(text='Data missing in {:s} <br>'.format("/".join(mesa_model.mesa_dir.split("/")[:-1])) +\
+                                  'for run {:s}'.format(mesa_model.mesa_dir.split("/")[-1]), 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=0.01,
+                        y=0.5,
+                        bordercolor='black',
+                        borderwidth=0)
+            f.update_layout(template='simple_white',
+                        height=800, width=1200)
+            return f
+
+        porbi = mesa_model.porbi 
+        mdi = mesa_model.mdi 
+        mai = mesa_model.mai 
 
         # star 1
-        f = px.line(df1, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 1', line =dict(color='royalblue', width=3),
+        f = px.line(mesa_model.s1_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 1', line =dict(color='royalblue', width=3),
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
         
         # plot comparison tracks if provided
-        if compare_df1 is not None:
-             f.add_trace(px.line(compare_df1, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
+        if not mesa_model.s2_compare_df.empty:
+             f.add_trace(px.line(mesa_model.s1_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
                          hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
              
         # ZAMS marker
-        f.add_trace(px.scatter(df1.iloc[[0]], x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(
+        f.add_trace(px.scatter(mesa_model.s1_df.iloc[[0]], x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(
                     name="ZAMS",
                     marker=dict(color='LightSkyBlue', 
                     line=dict(color='MediumPurple',width=2)),
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
 
         # star 2
-        f.add_trace(px.line(df2, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2', line_color='darkorange',
+        f.add_trace(px.line(mesa_model.s2_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2', line_color='darkorange',
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
-        if compare_df2 is not None:
-             f.add_trace(px.line(compare_df2, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2 (alt.)', line_color='orangered',
+        if not mesa_model.s2_compare_df.empty:
+             f.add_trace(px.line(mesa_model.s2_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2 (alt.)', line_color='orangered',
                          hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
 
         # ZAMS marker
-        f.add_trace(px.scatter(df2.iloc[[0]], x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(
+        f.add_trace(px.scatter(mesa_model.s2_df.iloc[[0]], x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(
                     name="ZAMS",
                     marker=dict(color='moccasin', 
                     line=dict(color='MediumPurple',width=2)),
@@ -130,8 +145,8 @@ def HRD_on_click(clickData, df1, df2, compare_df1=None, compare_df2=None, compar
         f.add_annotation(text='P<sub>orb,i</sub> = {:.2f} d <br>'.format(porbi) +\
                               'M<sub>1</sub> = {:.2f} M<sub>&#8857;</sub> <br>'.format(mdi)+\
                               'M<sub>2</sub> = {:.2f} M<sub>&#8857;</sub> <br>'.format(mai)+\
-                              'TF1: {:s} <br>'.format(tf1)+\
-                              'TF1 (alt.): {:s}'.format(compare_tf1), 
+                              'TF1: {:s} <br>'.format(mesa_model.tf1)+\
+                              'TF1 (alt.): {:s}'.format(mesa_model.alt_tf1), 
                         align='left',
                         showarrow=False,
                         xref='paper',

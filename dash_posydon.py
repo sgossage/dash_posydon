@@ -29,8 +29,16 @@ class MESA_model:
         self.mesa_dir = ""
         self.compare_dir = compare_dir
 
-    def load_data(self, mesa_dir):
-        self.mesa_dir = mesa_dir
+    def set_mesa_dir(self, clickData):
+
+        self.mesa_dir = clickData["points"][0]["customdata"][1]
+        self.porbi = clickData["points"][0]["y"]
+        self.mdi = clickData["points"][0]["x"]
+        self.mai = clickData["points"][0]["customdata"][0]
+
+
+    def load_data(self):
+        mesa_dir = self.mesa_dir
         self.s1_df, self.s2_df, self.bdf, self.tf1 = download_data_to_df(mesa_dir)
         self.s1_compare_df, self.s2_compare_df, self.compare_bdf, self.alt_tf1 = download_data_to_df(mesa_dir, self.compare_dir)
 
@@ -109,34 +117,36 @@ def update_slice_graph(q, toggle_value):
     return f
 
 # Highlight model clicked on in grid slice plot
+# Triggers on clicking grid-slice-plot, uses current state of grid-slice plot to clean old traces
 @callback(
     Output('grid-slice-graph', 'figure', allow_duplicate=True),
-    #Input('grid-slice-slider', 'value'),
+    Output('grid-slice-graph', 'clickData'),
     Input('grid-slice-graph', 'clickData'),
-    #Input('comparison-toggle', 'value'),
-    #Input('grid-slice-graph', 'figure'),
     State('grid-slice-graph', 'figure'),
     prevent_initial_call=True
 )
 #def highlight_on_click(q, clickData, toggle_value, current_fig):
 def highlight_on_click(clickData, current_fig):
 
-    for i, trace in enumerate(current_fig['data']):
-        if 'name' in trace and trace['name'] == 'selected':
-            current_fig['data'][i].clear()
-
     if clickData:
-        #f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value)
-        porbi = clickData["points"][0]["y"]
-        mdi = clickData["points"][0]["x"]
+
+        mesa_model.set_mesa_dir(clickData)
+
+        # if a trace for selected data already exists, delete it
+        for i, trace in enumerate(current_fig['data']):
+            if 'name' in trace and trace['name'] == 'selected':
+                current_fig['data'][i].clear()
+
+        porbi = mesa_model.porbi
+        mdi = mesa_model.mdi
         
-        # highlight selected point on grid plot
+        # add a new trace to highlight selected point on grid plot
         current_fig['data'].append(px.scatter(x=[float(mdi)], y=[float(porbi)]).update_traces(
-                    marker=dict(color='LightSkyBlue', symbol='square-open', size=20, 
-                    line=dict(color='MediumPurple',width=6)
-                    ), hoverinfo='skip', hovertemplate=None, name='selected').data[0])
+                                              marker=dict(color='LightSkyBlue', symbol='square-open', size=20, 
+                                                          line=dict(color='MediumPurple',width=6)), 
+                                              hoverinfo='skip', hovertemplate=None, name='selected').data[0])
         
-        return current_fig #f
+        return current_fig, None
     else:
         raise PreventUpdate
 
@@ -148,51 +158,27 @@ def highlight_on_click(clickData, current_fig):
     Output('star2-dropdown', 'options'),
     Output('binary-x-dropdown', 'options'),
     Output('binary-y-dropdown', 'options'),
-    Input('grid-slice-graph', 'clickData')
+    Input('grid-slice-graph', 'clickData'),
+    prevent_initial_call = True
 )
-def load_and_plot_click_data(clickData):
-    
-    if clickData:
-        try:
-            mesa_dir = clickData["points"][0]["customdata"][1]
-        except KeyError as e:
-            raise PreventUpdate
-        mesa_model.load_data(mesa_dir)
-
-        if mesa_model.s1_df is not None:
-
-            # plot HRD for selected model
-            f = HRD_on_click(clickData, mesa_model.s1_df, mesa_model.s2_df,
-                                        mesa_model.s1_compare_df, mesa_model.s2_compare_df, mesa_model.alt_tf1)
-            return f, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
-        else:
-            # when no data (history) files are found...
-            f = go.Figure()
-            f.add_annotation(text='Data missing in {:s} <br>'.format("/".join(mesa_dir.split("/")[:-1])) +\
-                                  'for run {:s}'.format(mesa_dir.split("/")[-1]), 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=0.01,
-                        y=0.5,
-                        bordercolor='black',
-                        borderwidth=0)
-            f.update_layout(template='simple_white',
-                        height=800, width=1200)
-            
-            return f, [], [], [], []
+def load_and_plot_HRD(clickData):
         
-    else:
-        raise PreventUpdate
+    mesa_model.load_data()
+
+    # plot HRD for selected model
+    f = HRD_on_click(mesa_model)
+        
+    return f, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
+
 
 # update star 1 time evo
 @callback(
     Output('star1-timeseries', 'figure'),
     Input('star1-dropdown', 'value'),
-    Input('star1-xaxis-type', 'value')
+    Input('star1-xaxis-type', 'value'),
+    Input('grid-slice-graph', 'clickData')
 )
-def load_and_plot_click_data_pri(star1_y, star1_x):
+def load_and_plot_click_data_pri(star1_y, star1_x, clickData):
     
     if star1_x == "log Age":
         star1_x = "star_age"
@@ -224,9 +210,10 @@ def load_and_plot_click_data_pri(star1_y, star1_x):
 @callback(
     Output('star2-timeseries', 'figure'),
     Input('star2-dropdown', 'value'),
-    Input('star2-xaxis-type', 'value')
+    Input('star2-xaxis-type', 'value'),
+    Input('grid-slice-graph', 'clickData')
 )
-def load_and_plot_click_data_sec(star2_y, star2_x):
+def load_and_plot_click_data_sec(star2_y, star2_x, clickData):
     
     if star2_x == "log Age":
         star2_x = "star_age"
@@ -259,9 +246,10 @@ def load_and_plot_click_data_sec(star2_y, star2_x):
     Output('binary-plot', 'figure'),
     Input('binary-x-dropdown', 'value'),
     Input('binary-y-dropdown', 'value'),
-    Input('binary-checklist', 'value')
+    Input('binary-checklist', 'value'),
+    Input('grid-slice-graph', 'clickData')
 )
-def load_and_plot_click_data_bin(bin_x, bin_y, log_options):
+def load_and_plot_click_data_bin(bin_x, bin_y, log_options, clickData):
 
     if log_options:
         xaxis_type = 'log' if 'log-x' in log_options else 'linear'
@@ -301,7 +289,8 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options):
         
     else:
         raise PreventUpdate
-    
+
+# plot comparison highlights 
 @callback(
     Output('grid-slice-graph', 'figure', allow_duplicate=True),
     Input('grid-slice-slider', 'value'),
@@ -311,13 +300,13 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options):
 )
 def highlight_comparisons(q, value):
 
-    if ((mesa_model.compare_dir is None) | (mesa_model.compare_dir == "")):
+    if not mesa_model.compare_dir:
         raise PreventUpdate
     else:
         f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=value)
         return f
 
-# set compare dir
+# set compare dir and initialize comparison toggle to False for it
 @callback(
     Output('comparison-toggle', 'value'),
     Input('input-comp-dir', 'value'),
