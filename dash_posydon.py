@@ -18,6 +18,10 @@ import plotly.graph_objects as go
 from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values
 from ssh_io import download_data_to_df
 
+fac = 1.0
+fig_width = fac*1200
+fig_height = fac*900
+
 # some globals
 q_range = np.arange(0.05, 1.05, 0.05)
 gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e+00_Zsun/LITE/grid_low_res_combined_rerun6b_LBV_wind+dedt_energy_eqn.h5"
@@ -64,21 +68,21 @@ app.layout = html.Div([
                                                                 "always_visible": True,
                                                                 "template": "q = {value}",
                                                                 "style": {"color": "LightSteelBlue", "fontSize": "20px"}}), 
-                                                       style={'width': '50%', 'padding-left':'15%', 'padding-right':'25%', 'padding-top':'5%'}),
+                                                       style={'width': '50%', 'padding-left':'10%', 'padding-right':'25%', 'padding-top':'5%'}),
                                                     html.Div([dcc.Input(id='input-comp-dir', type='text', 
                                                               value='/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5'),
                                                               daq.ToggleSwitch( id='comparison-toggle', value=False, size=30)], 
-                                                              style={"display":"flex", 'padding-left':'80%'}),
+                                                              style={"display":"flex", 'padding-left':'63%'}),
                                                     # slice plot                     
                                                     dcc.Loading(
                                                       id = "slice-loading", type = 'cube',
-                                                      children=[html.Div(dcc.Graph(id='grid-slice-graph', figure={"layout":{"height":800, "width":1200}}) )]
+                                                      children=[html.Div(dcc.Graph(id='grid-slice-graph', figure={"layout":{"height":fig_height, "width":fig_width}}) )]
                                                       )
                                             ]),
                                     # HRD plot
                                     html.Div([dcc.Loading(
                                                 id = "evo-loading", type = 'cube', 
-                                                children=[html.Div(dcc.Graph(id='hrd-graph', figure={"layout":{"height":800, "width":1200}}))]
+                                                children=[html.Div(dcc.Graph(id='hrd-graph', figure={"layout":{"height":fig_height, "width":fig_width}}))]
                                                 )
                                           ])
                                  ], 
@@ -87,19 +91,19 @@ app.layout = html.Div([
                         html.Div([html.Div(children=[html.Label(['Star 1 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
                                            dcc.Dropdown(id='star1-dropdown', style={'width': '50%'}),
                                            dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star1-xaxis-type', inline=True),
-                                           dcc.Graph(id='star1-timeseries', figure={"layout":{"height":400, "width":800}}),
+                                           dcc.Graph(id='star1-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}}),
                                            html.Label(['Star 2 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
                                            dcc.Dropdown(id='star2-dropdown', style={'width': '50%'}),
                                            dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star2-xaxis-type', inline=True),
-                                           dcc.Graph(id='star2-timeseries', figure={"layout":{"height":400, "width":800}})]),
+                                           dcc.Graph(id='star2-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}})]),
                                   html.Div(children=[html.Label(['Binary y-Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
                                            dcc.Dropdown(id='binary-y-dropdown', style={'width': '50%'}),
                                            html.Label(['Binary x-Data:'], style={'font-weight': 'bold', "text-align": "center"}),
                                            dcc.Dropdown(id='binary-x-dropdown', style={'width': '50%'}),
                                            dcc.Checklist(['log-x', 'log-y', 'star 2'], id='binary-checklist', inline=True),
-                                           dcc.Graph(id='binary-plot', figure={"layout":{"height":800, "width":1200}})
+                                           dcc.Graph(id='binary-plot', figure={"layout":{"height":fig_height, "width":fig_width}})
                                     ])
-                                ], style={"display":"flex", "gap":"400px", "align-items":"flex-end"})
+                                ], style={"display":"flex", "gap":"150px", "align-items":"flex-end"})
                         
                       ])
 
@@ -113,7 +117,7 @@ app.layout = html.Div([
 def update_slice_graph(q, toggle_value):
 
     # plot grid plot for selected q
-    f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value)
+    f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value, fig_width=fig_width, fig_height=fig_height)
     return f
 
 # Highlight model clicked on in grid slice plot
@@ -142,8 +146,8 @@ def highlight_on_click(clickData, current_fig):
         
         # add a new trace to highlight selected point on grid plot
         current_fig['data'].append(px.scatter(x=[float(mdi)], y=[float(porbi)]).update_traces(
-                                              marker=dict(color='LightSkyBlue', symbol='square-open', size=20, 
-                                                          line=dict(color='MediumPurple',width=6)), 
+                                              marker=dict(color='LightSkyBlue', symbol='square-open', size=15, 
+                                                          line=dict(color='MediumPurple',width=4)), 
                                               hoverinfo='skip', hovertemplate=None, name='selected').data[0])
         
         return current_fig, None
@@ -166,7 +170,7 @@ def load_and_plot_HRD(clickData):
     mesa_model.load_data()
 
     # plot HRD for selected model
-    f = HRD_on_click(mesa_model)
+    f = HRD_on_click(mesa_model, fig_width=fig_width, fig_height=fig_height)
         
     return f, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
 
@@ -194,13 +198,13 @@ def load_and_plot_click_data_pri(star1_y, star1_x, options):
                         hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
             
         # plot comparison tracks if provided
-        if mesa_model.s1_compare_df is not None:
+        if not mesa_model.s1_compare_df.empty:
             f.add_trace(px.line(mesa_model.s1_compare_df, x=star1_x, y=star1_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
                             hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
             
         f.update_layout(template='simple_white',
                             xaxis_type=xaxis_type,
-                            height=400, width=800)
+                            height=fig_height*0.75, width=fig_width*0.75)
 
         return f
         
@@ -230,13 +234,13 @@ def load_and_plot_click_data_sec(star2_y, star2_x, options):
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
         
         # plot comparison tracks if provided
-        if mesa_model.s2_compare_df is not None:
+        if not mesa_model.s2_compare_df.empty:
              f.add_trace(px.line(mesa_model.s2_compare_df, x=star2_x, y=star2_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 2 (alt.)', line =dict(color='orangered', width=1),
                          hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
         f.update_layout(template='simple_white',
                         xaxis_type=xaxis_type,
-                        height=400, width=800)
+                        height=fig_height*0.75, width=fig_width*0.75)
 
         return f
         
@@ -273,7 +277,7 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
                             hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
         # plot comparison tracks if provided
-        if mesa_model.compare_bdf is not None:
+        if not mesa_model.compare_bdf.empty:
             f.add_trace(px.line(mesa_model.compare_bdf, x=bin_x, y=bin_y, custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='magenta', width=1),
                          hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
              
@@ -286,7 +290,7 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
         f.update_layout(template='simple_white',
                         xaxis_type=xaxis_type,
                         yaxis_type=yaxis_type,
-                        height=800, width=1200)
+                        height=fig_height, width=fig_width)
 
         return f
         

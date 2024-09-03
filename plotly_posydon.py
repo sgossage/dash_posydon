@@ -34,7 +34,7 @@ def get_IF_values(grid_path):
 
     return iv, fv
 
-def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True):
+def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_width=1200, fig_height=800):
     
     TF12 = combine_TF12(fv['interpolation_class'], fv['termination_flag_2'])
     cut = (iv['star_2_mass']/iv['star_1_mass'] < q+0.025) & (iv['star_2_mass']/iv['star_1_mass'] > q-0.025)
@@ -56,7 +56,7 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True):
     f.update_layout(template='simple_white',
                     xaxis_title="log<sub>10</sub> M<sub>1</sub>/M<sub>&#8857;</sub>", 
                     yaxis_title="log<sub>10</sub> P<sub>orb</sub>/days", legend_title="Termination Flags",
-                    height=800, width=1200,
+                    height=fig_height, width=fig_width,
                     margin={'t':0,'l':0,'b':0,'r':0})
     
     # prevent duplicate labels in legend
@@ -84,7 +84,7 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True):
     return f
 
 
-def HRD_on_click(mesa_model):
+def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
         
         if mesa_model.s1_df.empty:
             # when no data (history) files are found...
@@ -100,7 +100,7 @@ def HRD_on_click(mesa_model):
                         bordercolor='black',
                         borderwidth=0)
             f.update_layout(template='simple_white',
-                        height=800, width=1200)
+                        height=fig_height, width=fig_width)
             return f
 
         porbi = mesa_model.porbi 
@@ -160,7 +160,7 @@ def HRD_on_click(mesa_model):
         f.update_layout(template='simple_white',
                         xaxis_title="log<sub>10</sub> T<sub>eff</sub>", 
                         yaxis_title="log<sub>10</sub> L/L<sub>&#8857;</sub>", legend_title="",
-                        height=800, width=1200,
+                        height=fig_height, width=fig_width,
                         xaxis = dict(autorange="reversed"))
     
         return f
