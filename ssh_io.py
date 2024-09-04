@@ -140,48 +140,6 @@ def available_comparison(original_remote_paths, alt_parent_dir):
             availability_list.append(False)
             success_list.append(False)
 
-    return availability_list, success_list
-
-
-    for original_remote_path in original_remote_paths:
-
-        available = False
-        success = False
-        # (remote) parent dir of directory stored in grid and base run name (w/o grid index)
-        base_run_dir = original_remote_path.split('/')[-1].split("index_")[0]
-
-
-        # this is the path to the desired run
-        path_to_run = cmd_out
-        
-        #print(path_to_run =="")
-        if path_to_run == "":
-            available = False
-            success = False
-        else:
-            try:
-                ftp_client.get(os.path.join(path_to_run, 'out.txt.gz'), 'quest_mesa_store/tmp_out.txt.gz')
-                available = True
-                
-                termination_flag = get_flag_from_MESA_output('quest_mesa_store/tmp_out.txt.gz')
-                success = True if (("min_timestep" not in termination_flag) & ("timelimit" not in termination_flag)) else False
-
-            except FileNotFoundError as e:
-
-                try:
-                    ftp_client.get(os.path.join(path_to_run, 'out.txt'), 'quest_mesa_store/tmp_out.txt')
-                    available = True
-
-                    termination_flag = get_flag_from_MESA_output('quest_mesa_store/tmp_out.txt')
-                    success = True if (("min_timestep" not in termination_flag) & ("timelimit" not in termination_flag)) else False
-
-                except FileNotFoundError as e:
-                    available = False
-                    success = False
-        
-        availability_list.append(available)
-        success_list.append(success)
-
     ftp_client.close()
     ssh_client.close()
 
