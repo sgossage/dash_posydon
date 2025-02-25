@@ -13,6 +13,7 @@ from dash import Dash, html, dcc, callback, Output, Input, State, ctx
 import pandas as pd
 import plotly.express as px
 from dash.exceptions import PreventUpdate
+import sys
 
 import plotly.graph_objects as go
 from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values
@@ -24,7 +25,9 @@ fig_height = fac*900
 
 # some globals
 q_range = np.arange(0.05, 1.05, 0.05)
-gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e+00_Zsun/LITE/grid_low_res_combined_rerun6b_LBV_wind+dedt_energy_eqn.h5"
+#gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e+00_Zsun/LITE/grid_low_res_combined_rerun6b_LBV_wind+dedt_energy_eqn.h5"
+#gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e-04_Zsun/LITE/grid_random_combined_rerun7b_LBV_wind+dedt_hepulse_NOCSTOP.h5"
+gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS/1e+00_Zsun.h5"
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
 
@@ -43,6 +46,7 @@ class MESA_model:
 
     def load_data(self):
         mesa_dir = self.mesa_dir
+        print(mesa_dir)
         self.s1_df, self.s2_df, self.bdf, self.tf1 = download_data_to_df(mesa_dir)
         self.s1_compare_df, self.s2_compare_df, self.compare_bdf, self.alt_tf1 = download_data_to_df(mesa_dir, self.compare_dir)
 
@@ -329,4 +333,4 @@ def set_compare_dir(value):
 
 if __name__ == "__main__":
     # Run the app
-    app.run(port=8080, debug=True)
+    app.run(port=sys.argv[1], debug=True)

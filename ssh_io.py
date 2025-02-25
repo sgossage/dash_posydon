@@ -55,41 +55,68 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
     # try to download history files and console output from the run
     try:
         ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_h1_name))
-        ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_h2_name))
+        print('Downloaded', os.path.join(path_to_run, 'LOGS1/history.data.gz'))
+        df1 = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_h1_name), header=4, delimiter=r"\s+")
+
+        # in CO-star grids, star 2 won't always have a history file
+        try:
+            ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_h2_name))
+            print('Downloaded', os.path.join(path_to_run, 'LOGS2/history.data.gz'))
+            df2 = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_h2_name), header=4, delimiter=r"\s+")
+        except FileNotFoundError as e:
+            print("No star 2 history")
+            df2 = pd.DataFrame()
+            pass
+
         ftp_client.get(os.path.join(path_to_run, 'binary_history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_bh_name))
+        print('Downloaded', os.path.join(path_to_run, 'binary_history.data.gz'))
+        bdf = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_bh_name), header=4, delimiter=r"\s+")
+
         ftp_client.get(os.path.join(path_to_run, 'out.txt.gz'), 'quest_mesa_store/{:s}.txt.gz'.format(generic_out_name))
+        print('Downloaded', os.path.join(path_to_run, 'out.txt.gz'))
 
         ftp_client.close()
         ssh_client.close()
-
-        df1 = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_h1_name), header=4, delimiter=r"\s+")
-        df2 = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_h2_name), header=4, delimiter=r"\s+")
-        bdf = pd.read_csv("quest_mesa_store/{:s}.data.gz".format(generic_bh_name), header=4, delimiter=r"\s+")
         
         return df1, df2, bdf, get_flag_from_MESA_output('quest_mesa_store/{:s}.txt.gz'.format(generic_out_name))
 
     except FileNotFoundError as e:
 
+        print(e)
+        
         pass
 
     # if no gzipped files found, try looking for uncompressed
     try:
         ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data'), 'quest_mesa_store/{:s}.data'.format(generic_h1_name))
-        ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data'), 'quest_mesa_store/{:s}.data'.format(generic_h2_name))
+        print('Downloaded', os.path.join(path_to_run, 'LOGS1/history.data'))
+        df1 = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_h1_name), header=4, delimiter=r"\s+")
+
+        # in CO-star grids, star 2 won't always have a history file
+        try:
+            ftp_client.get(os.path.join(path_to_run, 'LOGS2/history.data'), 'quest_mesa_store/{:s}.data'.format(generic_h2_name))
+            print('Downloaded', os.path.join(path_to_run, 'LOGS2/history.data'))
+            df2 = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_h2_name), header=4, delimiter=r"\s+")
+        except FileNotFoundError as e:
+            print("No star 2 history")
+            df2 = pd.DataFrame()
+            pass
+
         ftp_client.get(os.path.join(path_to_run, 'binary_history.data'), 'quest_mesa_store/{:s}.data'.format(generic_bh_name))
+        print('Downloaded', os.path.join(path_to_run, 'binary_history.data'))
+        bdf = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_bh_name), header=4, delimiter=r"\s+")
+
         ftp_client.get(os.path.join(path_to_run, 'out.txt'), 'quest_mesa_store/{:s}.txt'.format(generic_out_name))
+        print('Downloaded', os.path.join(path_to_run, 'out.txt'))
 
         ftp_client.close()
         ssh_client.close()
-
-        df1 = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_h1_name), header=4, delimiter=r"\s+")
-        df2 = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_h2_name), header=4, delimiter=r"\s+")
-        bdf = pd.read_csv("quest_mesa_store/{:s}.data".format(generic_bh_name), header=4, delimiter=r"\s+")
 
         return df1, df2, bdf, get_flag_from_MESA_output('quest_mesa_store/{:s}.txt'.format(generic_out_name))
 
     # nothing found
     except FileNotFoundError as e:
+
         ftp_client.close()
         ssh_client.close()
 

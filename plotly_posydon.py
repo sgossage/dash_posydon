@@ -113,7 +113,7 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
         
         # plot comparison tracks if provided
         if not mesa_model.s2_compare_df.empty:
-             f.add_trace(px.line(mesa_model.s1_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
+            f.add_trace(px.line(mesa_model.s1_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
                          hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
              
         # ZAMS marker
@@ -124,19 +124,21 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
 
         # star 2
-        f.add_trace(px.line(mesa_model.s2_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2', line_color='darkorange',
+        if not mesa_model.s2_df.empty:
+            f.add_trace(px.line(mesa_model.s2_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2', line_color='darkorange',
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
         if not mesa_model.s2_compare_df.empty:
-             f.add_trace(px.line(mesa_model.s2_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2 (alt.)', line_color='orangered',
+            f.add_trace(px.line(mesa_model.s2_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2 (alt.)', line_color='orangered',
                          hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
 
         # ZAMS marker
-        f.add_trace(px.scatter(mesa_model.s2_df.iloc[[0]], x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(
-                    name="ZAMS",
-                    marker=dict(color='moccasin', 
-                    line=dict(color='MediumPurple',width=2)),
-                    hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+        if not mesa_model.s2_df.empty:
+            f.add_trace(px.scatter(mesa_model.s2_df.iloc[[0]], x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(
+                        name="ZAMS",
+                        marker=dict(color='moccasin', 
+                        line=dict(color='MediumPurple',width=2)),
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
 
         # don't show ZAMS markers in the legend
         f.for_each_trace(lambda trace: trace.update(showlegend=False) if (trace.name == "ZAMS") else trace.update(showlegend=True))
