@@ -112,7 +112,7 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
         
         # plot comparison tracks if provided
-        if not mesa_model.s2_compare_df.empty:
+        if not mesa_model.s1_compare_df.empty:
             f.add_trace(px.line(mesa_model.s1_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
                          hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
              

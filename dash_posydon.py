@@ -28,6 +28,7 @@ q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e+00_Zsun/LITE/grid_low_res_combined_rerun6b_LBV_wind+dedt_energy_eqn.h5"
 #gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e-04_Zsun/LITE/grid_random_combined_rerun7b_LBV_wind+dedt_hepulse_NOCSTOP.h5"
 gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS/1e+00_Zsun.h5"
+#gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
 

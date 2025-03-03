@@ -82,6 +82,7 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
 
     except FileNotFoundError as e:
 
+        print("Failed to get .gz files")
         print(e)
         
         pass
