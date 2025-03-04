@@ -57,7 +57,10 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_wid
                     xaxis_title="log<sub>10</sub> M<sub>1</sub>/M<sub>&#8857;</sub>", 
                     yaxis_title="log<sub>10</sub> P<sub>orb</sub>/days", legend_title="Termination Flags",
                     height=fig_height, width=fig_width,
-                    margin={'t':0,'l':0,'b':0,'r':0})
+                    margin={'t':0,'l':0,'b':0,'r':0}, 
+                    font=dict(size=18),
+                    legend=dict(font=dict(size=12))
+                   )
     
     # prevent duplicate labels in legend
     names = set()

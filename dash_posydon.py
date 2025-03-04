@@ -27,7 +27,7 @@ fig_height = fac*900
 q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e+00_Zsun/LITE/grid_low_res_combined_rerun6b_LBV_wind+dedt_energy_eqn.h5"
 #gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e-04_Zsun/LITE/grid_random_combined_rerun7b_LBV_wind+dedt_hepulse_NOCSTOP.h5"
-gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS/1e+00_Zsun.h5"
+gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/HMS-HMS/1e+00_Zsun.h5"
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
@@ -62,53 +62,64 @@ app.layout = html.Div([
                         # 1st row, grid slice and HRD
                         html.Div([
                                             # slice slider
-                                  html.Div([html.Div(dcc.Slider(
-                                                       q_range.min(), 
-                                                       q_range.max(), 
-                                                       step=None, 
-                                                       marks={ round(q,2) : "" for q in q_range}, #str(round(q, 2))
-                                                       value=q_range[0], 
-                                                       id='grid-slice-slider',
-                                                       tooltip={"placement": "top", 
-                                                                "always_visible": True,
-                                                                "template": "q = {value}",
-                                                                "style": {"color": "LightSteelBlue", "fontSize": "20px"}}), 
-                                                       style={'width': '50%', 'padding-left':'10%', 'padding-right':'25%', 'padding-top':'5%'}),
-                                                    html.Div([dcc.Input(id='input-comp-dir', type='text', 
-                                                              value='/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5'),
-                                                              daq.ToggleSwitch( id='comparison-toggle', value=False, size=30)], 
-                                                              style={"display":"flex", 'padding-left':'63%'}),
-                                                    # slice plot                     
-                                                    dcc.Loading(
-                                                      id = "slice-loading", type = 'cube',
-                                                      children=[html.Div(dcc.Graph(id='grid-slice-graph', figure={"layout":{"height":fig_height, "width":fig_width}}) )]
-                                                      )
+                                  html.Div([html.Div(
+                                                     dcc.Slider(
+                                                                q_range.min(), 
+                                                                q_range.max(), 
+                                                                step=None, 
+                                                                marks={ round(q,2) : "" for q in q_range}, #str(round(q, 2))
+                                                                value=q_range[0], 
+                                                                id='grid-slice-slider',
+                                                                tooltip={"placement": "top", 
+                                                                        "always_visible": True,
+                                                                        "template": "q = {value}",
+                                                                        "style": {"color": "LightSteelBlue", "fontSize": "20px"}}
+                                                               ), 
+                                                     style={'width': '50%', 'padding-left':'10%', 'padding-right':'25%', 'padding-top':'5%'}
+                                                    ),
+                                                     # comparison grid toggle
+                                            html.Div([
+                                                      dcc.Input(id='input-comp-dir', type='text', 
+                                                                value='/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5'),
+                                                      daq.ToggleSwitch( id='comparison-toggle', value=False, size=30)
+                                                     ], 
+                                                     style={"display":"flex", 'padding-left':'80%', 'padding-bottom': '5%'}
+                                                    ),
+                                                      # slice plot                     
+                                            dcc.Loading(id = "slice-loading", type = 'cube',
+                                                        children=[html.Div( dcc.Graph(id='grid-slice-graph', figure={"layout":{"height":fig_height, "width":fig_width}}) )]
+                                                       )
                                             ]),
                                     # HRD plot
                                     html.Div([dcc.Loading(
                                                 id = "evo-loading", type = 'cube', 
-                                                children=[html.Div(dcc.Graph(id='hrd-graph', figure={"layout":{"height":fig_height, "width":fig_width}}))]
+                                                children=[html.Div( dcc.Graph(id='hrd-graph', figure={"layout":{"height":fig_height, "width":fig_width}}) )]
                                                 )
-                                          ])
+                                            ])
                                  ], 
                                  style={"display":"flex", "gap":"5px", "align-items":"flex-end"}),
+
                         # 2nd row of time series plots
                         html.Div([html.Div(children=[html.Label(['Star 1 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                                           dcc.Dropdown(id='star1-dropdown', style={'width': '50%'}),
-                                           dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star1-xaxis-type', inline=True),
-                                           dcc.Graph(id='star1-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}}),
-                                           html.Label(['Star 2 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                                           dcc.Dropdown(id='star2-dropdown', style={'width': '50%'}),
-                                           dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star2-xaxis-type', inline=True),
-                                           dcc.Graph(id='star2-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}})]),
+                                                     dcc.Dropdown(id='star1-dropdown', style={'width': '50%'}),
+                                                     dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star1-xaxis-type', inline=True),
+                                                     dcc.Graph(id='star1-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}}),
+                                                     html.Label(['Star 2 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
+                                                     dcc.Dropdown(id='star2-dropdown', style={'width': '50%'}),
+                                                     dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star2-xaxis-type', inline=True),
+                                                     dcc.Graph(id='star2-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}})
+                                                    ]
+                                           ),
                                   html.Div(children=[html.Label(['Binary y-Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                                           dcc.Dropdown(id='binary-y-dropdown', style={'width': '50%'}),
-                                           html.Label(['Binary x-Data:'], style={'font-weight': 'bold', "text-align": "center"}),
-                                           dcc.Dropdown(id='binary-x-dropdown', style={'width': '50%'}),
-                                           dcc.Checklist(['log-x', 'log-y', 'star 2'], id='binary-checklist', inline=True),
-                                           dcc.Graph(id='binary-plot', figure={"layout":{"height":fig_height, "width":fig_width}})
-                                    ])
-                                ], style={"display":"flex", "gap":"150px", "align-items":"flex-end"})
+                                                     dcc.Dropdown(id='binary-y-dropdown', style={'width': '50%'}),
+                                                     html.Label(['Binary x-Data:'], style={'font-weight': 'bold', "text-align": "center"}),
+                                                     dcc.Dropdown(id='binary-x-dropdown', style={'width': '50%'}),
+                                                     dcc.Checklist(['log-x', 'log-y', 'star 2'], id='binary-checklist', inline=True),
+                                                     dcc.Graph(id='binary-plot', figure={"layout":{"height":fig_height, "width":fig_width}})
+                                                    ]
+                                          )
+                                 ], 
+                                 style={"display":"flex", "gap":"150px", "align-items":"flex-end"})
                         
                       ])
 
