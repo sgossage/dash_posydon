@@ -55,6 +55,8 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
     path_to_run = cmd_out
     
     print(f"Targeting {path_to_run}...")
+
+    os.makedirs("quest_mesa_store", exist_ok=True)
     # try to download history files and console output from the run
     try:
         ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_h1_name))

@@ -29,8 +29,8 @@ def get_IF_values(grid_path):
 
     iv = grid.initial_values
     fv = grid.final_values
-    iv = pd.DataFrame(np.array(iv))
-    fv = pd.DataFrame(np.array(fv))
+    iv = grid.initial_values.to_df()
+    fv = grid.final_values.to_df()
     iv = iv.assign(mesa_dir=[ mdir.decode("utf-8") for mdir in grid.MESA_dirs])
     iv = iv.assign(grid_index=[ mdir.decode("utf-8").split("index_")[-1] for mdir in grid.MESA_dirs])
     iv = iv.assign(termination_flag_1=[ tf1 for tf1 in fv['termination_flag_1'].values])
