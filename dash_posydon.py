@@ -6,6 +6,7 @@ from posydon.visualization.combine_TF import combine_TF12
 from posydon.visualization.plot_defaults import (
     DEFAULT_MARKERS_COLORS_LEGENDS, add_flag_to_MARKERS_COLORS_LEGENDS,
     PLOT_PROPERTIES, DEFAULT_LABELS)
+from posydon.config import PATH_TO_POSYDON_DATA
 from collections import Counter
 import dash_daq as daq
 
@@ -27,8 +28,10 @@ fig_height = fac*900
 q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e+00_Zsun/LITE/grid_low_res_combined_rerun6b_LBV_wind+dedt_energy_eqn.h5"
 #gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e-04_Zsun/LITE/grid_random_combined_rerun7b_LBV_wind+dedt_hepulse_NOCSTOP.h5"
-gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/HMS-HMS/1e+00_Zsun.h5"
+#gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HMS/1e+00_Zsun.h5"
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
+#gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
+gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
 
@@ -61,7 +64,7 @@ app = Dash()
 app.layout = html.Div([
                         # 1st row, grid slice and HRD
                         html.Div([
-                                            # slice slider
+                                # slice slider
                                   html.Div([html.Div(
                                                      dcc.Slider(
                                                                 q_range.min(), 
@@ -72,20 +75,20 @@ app.layout = html.Div([
                                                                 id='grid-slice-slider',
                                                                 tooltip={"placement": "top", 
                                                                         "always_visible": True,
-                                                                        "template": "q = {value}",
-                                                                        "style": {"color": "LightSteelBlue", "fontSize": "20px"}}
+                                                                        "template": "q\u00A0=\u00A0{value}",
+                                                                        "style": {"color": "Black", "fontSize": "20px"}}
                                                                ), 
-                                                     style={'width': '50%', 'padding-left':'10%', 'padding-right':'25%', 'padding-top':'5%'}
+                                                     style={'width': '60%', 'padding-left':'10%', 'padding-right':'10%', 'padding-top':'5%'}
                                                     ),
-                                                     # comparison grid toggle
-                                            html.Div([
-                                                      dcc.Input(id='input-comp-dir', type='text', 
-                                                                value='/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5'),
-                                                      daq.ToggleSwitch( id='comparison-toggle', value=False, size=30)
-                                                     ], 
-                                                     style={"display":"flex", 'padding-left':'80%', 'padding-bottom': '5%'}
-                                                    ),
-                                                      # slice plot                     
+                                            # comparison grid toggle
+                                            #html.Div([
+                                            #          dcc.Input(id='input-comp-dir', type='text', 
+                                            #                    value='/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5'),
+                                            #          daq.ToggleSwitch( id='comparison-toggle', value=False, size=30)
+                                            #         ], 
+                                            #         style={"display":"flex", 'padding-left':'80%', 'padding-bottom': '5%'}
+                                            #        ),
+                                            # slice plot                     
                                             dcc.Loading(id = "slice-loading", type = 'cube',
                                                         children=[html.Div( dcc.Graph(id='grid-slice-graph', figure={"layout":{"height":fig_height, "width":fig_width}}) )]
                                                        )
@@ -100,26 +103,26 @@ app.layout = html.Div([
                                  style={"display":"flex", "gap":"5px", "align-items":"flex-end"}),
 
                         # 2nd row of time series plots
-                        html.Div([html.Div(children=[html.Label(['Star 1 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                                                     dcc.Dropdown(id='star1-dropdown', style={'width': '50%'}),
-                                                     dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star1-xaxis-type', inline=True),
-                                                     dcc.Graph(id='star1-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}}),
-                                                     html.Label(['Star 2 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                                                     dcc.Dropdown(id='star2-dropdown', style={'width': '50%'}),
-                                                     dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star2-xaxis-type', inline=True),
-                                                     dcc.Graph(id='star2-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}})
-                                                    ]
-                                           ),
-                                  html.Div(children=[html.Label(['Binary y-Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                                                     dcc.Dropdown(id='binary-y-dropdown', style={'width': '50%'}),
-                                                     html.Label(['Binary x-Data:'], style={'font-weight': 'bold', "text-align": "center"}),
-                                                     dcc.Dropdown(id='binary-x-dropdown', style={'width': '50%'}),
-                                                     dcc.Checklist(['log-x', 'log-y', 'star 2'], id='binary-checklist', inline=True),
-                                                     dcc.Graph(id='binary-plot', figure={"layout":{"height":fig_height, "width":fig_width}})
-                                                    ]
-                                          )
-                                 ], 
-                                 style={"display":"flex", "gap":"150px", "align-items":"flex-end"})
+                        #html.Div([html.Div(children=[html.Label(['Star 1 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
+                        #                             dcc.Dropdown(id='star1-dropdown', style={'width': '50%'}),
+                        #                             dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star1-xaxis-type', inline=True),
+                        #                             dcc.Graph(id='star1-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}}),
+                        #                             html.Label(['Star 2 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
+                        #                             dcc.Dropdown(id='star2-dropdown', style={'width': '50%'}),
+                        #                             dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star2-xaxis-type', inline=True),
+                        #                             dcc.Graph(id='star2-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}})
+                        #                            ]
+                        #                   ),
+                        #          html.Div(children=[html.Label(['Binary y-Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
+                        #                             dcc.Dropdown(id='binary-y-dropdown', style={'width': '50%'}),
+                        #                             html.Label(['Binary x-Data:'], style={'font-weight': 'bold', "text-align": "center"}),
+                        #                             dcc.Dropdown(id='binary-x-dropdown', style={'width': '50%'}),
+                        #                             dcc.Checklist(['log-x', 'log-y', 'star 2'], id='binary-checklist', inline=True),
+                        #                             dcc.Graph(id='binary-plot', figure={"layout":{"height":fig_height, "width":fig_width}})
+                        #                            ]
+                        #                  )
+                        #         ], 
+                        #         style={"display":"flex", "gap":"150px", "align-items":"flex-end"})
                         
                       ])
 
@@ -128,13 +131,18 @@ app.layout = html.Div([
 @callback(
     Output('grid-slice-graph', 'figure'),
     Input('grid-slice-slider', 'value'),
-    Input('comparison-toggle', 'value')
+    #Input('comparison-toggle', 'value')
 )
-def update_slice_graph(q, toggle_value):
+def update_slice_graph(q):
 
     # plot grid plot for selected q
-    f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value, fig_width=fig_width, fig_height=fig_height)
+    f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=False, fig_width=fig_width, fig_height=fig_height)
     return f
+#def update_slice_graph(q, toggle_value):
+
+    # plot grid plot for selected q
+#    f = dash_plot2D(q, iv, fv, mesa_model.compare_dir, highlight_comparisons=toggle_value, fig_width=fig_width, fig_height=fig_height)
+#    return f
 
 # Highlight model clicked on in grid slice plot
 # Triggers on clicking grid-slice-plot, uses current state of grid-slice plot to clean old traces
@@ -174,10 +182,10 @@ def highlight_on_click(clickData, current_fig):
 # Also update dropdown menu with available data columns
 @callback(
     Output('hrd-graph', 'figure'),
-    Output('star1-dropdown', 'options'),
-    Output('star2-dropdown', 'options'),
-    Output('binary-x-dropdown', 'options'),
-    Output('binary-y-dropdown', 'options'),
+    #Output('star1-dropdown', 'options'),
+    #Output('star2-dropdown', 'options'),
+    #Output('binary-x-dropdown', 'options'),
+    #Output('binary-y-dropdown', 'options'),
     Input('grid-slice-graph', 'clickData'),
     prevent_initial_call = True
 )
@@ -188,17 +196,17 @@ def load_and_plot_HRD(clickData):
     # plot HRD for selected model
     f = HRD_on_click(mesa_model, fig_width=fig_width, fig_height=fig_height)
         
-    return f, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
+    return f#, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
 
 
 # update star 1 time evo
-@callback(
-    Output('star1-timeseries', 'figure'),
-    Input('star1-dropdown', 'value'),
-    Input('star1-xaxis-type', 'value'),
-    Input('star1-dropdown', 'options'),
-    prevent_initial_call = True
-)
+#@callback(
+#    Output('star1-timeseries', 'figure'),
+#    Input('star1-dropdown', 'value'),
+#    Input('star1-xaxis-type', 'value'),
+#    Input('star1-dropdown', 'options'),
+#    prevent_initial_call = True
+#)
 def load_and_plot_click_data_pri(star1_y, star1_x, options):
     
     if star1_x == "log Age":
@@ -228,13 +236,13 @@ def load_and_plot_click_data_pri(star1_y, star1_x, options):
         raise PreventUpdate
 
 # update star 2 time evo
-@callback(
-    Output('star2-timeseries', 'figure'),
-    Input('star2-dropdown', 'value'),
-    Input('star2-xaxis-type', 'value'),
-    Input('star2-dropdown', 'options'),
-    prevent_initial_call = True
-)
+#@callback(
+#    Output('star2-timeseries', 'figure'),
+#    Input('star2-dropdown', 'value'),
+#    Input('star2-xaxis-type', 'value'),
+#    Input('star2-dropdown', 'options'),
+#    prevent_initial_call = True
+#)
 def load_and_plot_click_data_sec(star2_y, star2_x, options):
     
     if star2_x == "log Age":
@@ -264,14 +272,14 @@ def load_and_plot_click_data_sec(star2_y, star2_x, options):
         raise PreventUpdate
 
 # update binary time evo
-@callback(
-    Output('binary-plot', 'figure'),
-    Input('binary-x-dropdown', 'value'),
-    Input('binary-y-dropdown', 'value'),
-    Input('binary-checklist', 'value'),
-    Input('binary-x-dropdown', 'options'),
-    prevent_initial_call = True
-)
+#@callback(
+#    Output('binary-plot', 'figure'),
+#    Input('binary-x-dropdown', 'value'),
+#    Input('binary-y-dropdown', 'value'),
+#    Input('binary-checklist', 'value'),
+#    Input('binary-x-dropdown', 'options'),
+#    prevent_initial_call = True
+#)
 def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
 
     if log_options:
@@ -314,13 +322,12 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
         raise PreventUpdate
 
 # plot comparison highlights 
-@callback(
-    Output('grid-slice-graph', 'figure', allow_duplicate=True),
-    Input('grid-slice-slider', 'value'),
-    Input('comparison-toggle', 'value'),
-    prevent_initial_call=True
-    
-)
+#@callback(
+#    Output('grid-slice-graph', 'figure', allow_duplicate=True),
+#    Input('grid-slice-slider', 'value'),
+#    Input('comparison-toggle', 'value'),
+#    prevent_initial_call=True   
+#)
 def highlight_comparisons(q, value):
 
     if not mesa_model.compare_dir:
@@ -330,12 +337,11 @@ def highlight_comparisons(q, value):
         return f
 
 # set compare dir and initialize comparison toggle to False for it
-@callback(
-    Output('comparison-toggle', 'value'),
-    Input('input-comp-dir', 'value'),
-    prevent_initial_call=True
-    
-)
+#@callback(
+#    Output('comparison-toggle', 'value'),
+#    Input('input-comp-dir', 'value'),
+#    prevent_initial_call=True   
+#)
 def set_compare_dir(value):
 
     mesa_model.compare_dir = value

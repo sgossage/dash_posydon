@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from posydon.grids.psygrid import PSyGrid
 from posydon.visualization.combine_TF import combine_TF12
 from posydon.visualization.plot_defaults import (
@@ -26,8 +27,10 @@ def get_IF_values(grid_path):
     grid = PSyGrid()
     grid.load(grid_path)
 
-    iv = pd.DataFrame(grid.initial_values)
-    fv = pd.DataFrame(grid.final_values)
+    iv = grid.initial_values
+    fv = grid.final_values
+    iv = pd.DataFrame(np.array(iv))
+    fv = pd.DataFrame(np.array(fv))
     iv = iv.assign(mesa_dir=[ mdir.decode("utf-8") for mdir in grid.MESA_dirs])
     iv = iv.assign(grid_index=[ mdir.decode("utf-8").split("index_")[-1] for mdir in grid.MESA_dirs])
     iv = iv.assign(termination_flag_1=[ tf1 for tf1 in fv['termination_flag_1'].values])
@@ -40,8 +43,9 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_wid
     cut = (iv['star_2_mass']/iv['star_1_mass'] < q+0.025) & (iv['star_2_mass']/iv['star_1_mass'] > q-0.025)
     
     # plotly version of plot2D
-    f = px.scatter(iv[cut], x="star_1_mass", y="period_days", color=TF12[cut], custom_data=['star_2_mass', 'mesa_dir', 'grid_index', 'termination_flag_1'],
-                   log_x=True, log_y=True, hover_name="grid_index")
+    f = px.scatter(iv[cut], x="star_1_mass", y="period_days", color=TF12[cut], 
+                   custom_data=['star_2_mass', 'mesa_dir', 'grid_index', 'termination_flag_1'],
+                   hover_name="grid_index", log_x=True, log_y=True)
     
     f.update_traces(hovertemplate='M<sub>1</sub>: %{x:.2f} M<sub>&#8857;</sub> <br>' +\
                                   'M<sub>2</sub>: %{customdata[0]:.2f} M<sub>&#8857;</sub> <br>' +\
@@ -59,7 +63,7 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_wid
                     height=fig_height, width=fig_width,
                     margin={'t':0,'l':0,'b':0,'r':0}, 
                     font=dict(size=18),
-                    legend=dict(font=dict(size=12))
+                    legend=dict(font=dict(size=14))
                    )
     
     # prevent duplicate labels in legend
@@ -83,6 +87,29 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_wid
                         marker=dict(color=marker_color, symbol='square-open', size=10, 
                         line=dict(color=marker_color,width=3)
                         ), hoverinfo='skip', hovertemplate=None).data[0])
+                
+    x_tickvals = np.logspace(np.log10(iv[cut]['star_1_mass'].min()), 
+                             np.log10(iv[cut]['star_1_mass'].max()), 5)
+    x_tickstrs = [f"{np.log10(tick):.1f}" for tick in x_tickvals]
+    y_tickvals = np.logspace(np.log10(iv[cut]['period_days'].min()), 
+                             np.log10(iv[cut]['period_days'].max()), 5)
+    y_tickstrs = [f"{np.log10(tick):.1f}" for tick in y_tickvals]
+
+    f.update_layout(xaxis = dict(
+                                 tickmode='array',
+                                 tickvals=x_tickvals,
+                                 nticks=len(x_tickvals),
+                                 ticktext=x_tickstrs,
+                                 ticks='inside'
+                                ),
+                    yaxis = dict(
+                                 tickmode='array',
+                                 tickvals=y_tickvals,
+                                 nticks=len(y_tickvals),
+                                 ticktext=y_tickstrs,
+                                 ticks='inside'
+                                )
+                    )
 
     return f
 

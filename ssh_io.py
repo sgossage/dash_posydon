@@ -23,14 +23,15 @@ def ssh_connect():
 def download_data_to_df(original_remote_path, alt_parent_dir=None):
 
     # open clients
+    print("Opening SSH clients...")
     ssh_client = ssh_connect()
     ftp_client = ssh_client.open_sftp()
 
+    print("Retrieving files...")
     # (remote) parent dir of directory stored in grid and base run name (w/o grid index)
     parent_dir = "/" + os.path.join(*original_remote_path.split('/')[:-1])
     base_run_dir = original_remote_path.split('/')[-1].split("index_")[0]
     grid_index = original_remote_path.split('/')[-1].split("index_")[-1]
-
     if alt_parent_dir is None:
         # command to list base run dir in parent dir
         command = 'ls -d {:s}/{:s}*'.format(parent_dir, base_run_dir)
@@ -46,12 +47,14 @@ def download_data_to_df(original_remote_path, alt_parent_dir=None):
         generic_bh_name = "alt_binary_history"
         generic_out_name = "alt_out"
 
+    print(f"Executing {command}...")
     # execute command and convert stdout
     stdin, stdout, stderr = ssh_client.exec_command(command)
     cmd_out = stdout.read().decode('utf-8').strip("\n")
     # this is the path to the desired run
     path_to_run = cmd_out
     
+    print(f"Targeting {path_to_run}...")
     # try to download history files and console output from the run
     try:
         ftp_client.get(os.path.join(path_to_run, 'LOGS1/history.data.gz'), 'quest_mesa_store/{:s}.data.gz'.format(generic_h1_name))
