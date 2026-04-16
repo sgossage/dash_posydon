@@ -62,7 +62,7 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_wid
                     yaxis_title="log<sub>10</sub> P<sub>orb</sub>/days", legend_title="Termination Flags",
                     height=fig_height, width=fig_width,
                     margin={'t':0,'l':0,'b':0,'r':0}, 
-                    font=dict(size=18),
+                    #font=dict(size=18),
                     legend=dict(font=dict(size=14))
                    )
     
@@ -100,14 +100,18 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_wid
                                  tickvals=x_tickvals,
                                  nticks=len(x_tickvals),
                                  ticktext=x_tickstrs,
-                                 ticks='inside'
+                                 ticks='inside',
+                                 tickfont=dict(size=16),
+                                 title_font=dict(size=18)
                                 ),
                     yaxis = dict(
                                  tickmode='array',
                                  tickvals=y_tickvals,
                                  nticks=len(y_tickvals),
                                  ticktext=y_tickstrs,
-                                 ticks='inside'
+                                 ticks='inside',
+                                 tickfont=dict(size=16),
+                                 title_font=dict(size=18)
                                 )
                     )
 
@@ -144,7 +148,7 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
         # plot comparison tracks if provided
         if not mesa_model.s1_compare_df.empty:
             f.add_trace(px.line(mesa_model.s1_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
-                         hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
              
         # ZAMS marker
         f.add_trace(px.scatter(mesa_model.s1_df.iloc[[0]], x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(
@@ -156,11 +160,11 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
         # star 2
         if not mesa_model.s2_df.empty:
             f.add_trace(px.line(mesa_model.s2_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2', line_color='darkorange',
-                    hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
         if not mesa_model.s2_compare_df.empty:
             f.add_trace(px.line(mesa_model.s2_compare_df, x="log_Teff", y="log_L", custom_data=['star_age', 'star_mass']).update_traces(name='Star 2 (alt.)', line_color='orangered',
-                         hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
 
         # ZAMS marker
         if not mesa_model.s2_df.empty:
@@ -186,13 +190,31 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
                         x=0.05,
                         y=0.05,
                         bordercolor='black',
-                        borderwidth=0)
+                        borderwidth=0,
+                        font=dict(size=14))
         
         # set aesthetics
         f.update_layout(template='simple_white',
                         xaxis_title="log<sub>10</sub> T<sub>eff</sub>", 
                         yaxis_title="log<sub>10</sub> L/L<sub>&#8857;</sub>", legend_title="",
                         height=fig_height, width=fig_width,
-                        xaxis = dict(autorange="reversed"))
+                        xaxis = dict(autorange="reversed"),
+                        legend=dict(x=0.05,
+                                    y=0.17,
+                                    xanchor="left",
+                                    yanchor="bottom",
+                                    font=dict(size=14)))
+        
+        f.update_layout(xaxis = dict(
+                                    ticks='inside',
+                                    tickfont=dict(size=16),
+                                    title_font=dict(size=18)
+                                    ),
+                        yaxis = dict(
+                                    ticks='inside',
+                                    tickfont=dict(size=16),
+                                    title_font=dict(size=18)
+                                    )
+                        )
     
         return f

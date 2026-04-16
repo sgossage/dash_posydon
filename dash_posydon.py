@@ -127,6 +127,65 @@ app.layout = html.Div([
                       ])
 
 # Callbacks
+@callback(
+    Output("grid-slice-graph", "figure", allow_duplicate=True),
+    Input("grid-slice-graph", "relayoutData"),
+    State("grid-slice-slider", "value"),
+    State("grid-slice-graph", "figure"),
+    prevent_initial_call=True
+)
+def update_ticks(relayout_data, q, fig):
+
+    if not relayout_data:
+        return fig
+    
+    cut = (iv['star_2_mass']/iv['star_1_mass'] < q+0.025) & (iv['star_2_mass']/iv['star_1_mass'] > q-0.025)
+    # ---- X axis ----
+    if "xaxis.autorange" in relayout_data:
+        # recompute from FULL dataset
+        x0 = np.log10(iv[cut]['star_1_mass'].min())
+        x1 = np.log10(iv[cut]['star_1_mass'].max())
+
+        x_tickvals = np.logspace(x0, x1, 5)
+        x_ticktext = [f"{np.log10(t):.1f}" for t in x_tickvals]
+
+        fig["layout"]["xaxis"]["tickvals"] = x_tickvals.tolist()
+        fig["layout"]["xaxis"]["ticktext"] = x_ticktext
+
+    elif "xaxis.range[0]" in relayout_data:
+        x0 = relayout_data["xaxis.range[0]"]
+        x1 = relayout_data["xaxis.range[1]"]
+
+        x_tickvals = np.logspace(x0, x1, 5)
+        x_ticktext = [f"{np.log10(t):.1f}" for t in x_tickvals]
+
+        fig["layout"]["xaxis"]["tickvals"] = x_tickvals.tolist()
+        fig["layout"]["xaxis"]["ticktext"] = x_ticktext
+
+    # ---- Y axis ----
+    if "yaxis.autorange" in relayout_data:
+        # recompute from FULL dataset
+        y0 = np.log10(iv[cut]['period_days'].min())
+        y1 = np.log10(iv[cut]['period_days'].max())
+
+        y_tickvals = np.logspace(y0, y1, 5)
+        y_ticktext = [f"{np.log10(t):.1f}" for t in y_tickvals]
+
+        fig["layout"]["yaxis"]["tickvals"] = y_tickvals.tolist()
+        fig["layout"]["yaxis"]["ticktext"] = y_ticktext
+
+    elif "yaxis.range[0]" in relayout_data:
+        y0 = relayout_data["yaxis.range[0]"]
+        y1 = relayout_data["yaxis.range[1]"]
+
+        y_tickvals = np.logspace(y0, y1, 5)
+        y_ticktext = [f"{np.log10(t):.1f}" for t in y_tickvals]
+
+        fig["layout"]["yaxis"]["tickvals"] = y_tickvals.tolist()
+        fig["layout"]["yaxis"]["ticktext"] = y_ticktext
+
+    return fig
+
 # Grid slice plot update on slider value
 @callback(
     Output('grid-slice-graph', 'figure'),
