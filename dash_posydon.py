@@ -30,8 +30,9 @@ q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e-04_Zsun/LITE/grid_random_combined_rerun7b_LBV_wind+dedt_hepulse_NOCSTOP.h5"
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HMS/1e+00_Zsun.h5"
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
-#gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
-gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
+gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
+#gpath = "/home/sethg/Research/Downloads/POSYDON_grids/rerun/grid_vlm_exp_rerun_fdm_limit_combined_processed.h5"
+#gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
 
@@ -62,69 +63,179 @@ app = Dash()
 
 # App layout
 app.layout = html.Div([
-                        # 1st row, grid slice and HRD
-                        html.Div([
-                                # slice slider
-                                  html.Div([html.Div(
-                                                     dcc.Slider(
-                                                                q_range.min(), 
-                                                                q_range.max(), 
-                                                                step=None, 
-                                                                marks={ round(q,2) : "" for q in q_range}, #str(round(q, 2))
-                                                                value=q_range[0], 
-                                                                id='grid-slice-slider',
-                                                                tooltip={"placement": "top", 
-                                                                        "always_visible": True,
-                                                                        "template": "q\u00A0=\u00A0{value}",
-                                                                        "style": {"color": "Black", "fontSize": "20px"}}
-                                                               ), 
-                                                     style={'width': '60%', 'padding-left':'10%', 'padding-right':'10%', 'padding-top':'5%'}
-                                                    ),
-                                            # comparison grid toggle
-                                            #html.Div([
-                                            #          dcc.Input(id='input-comp-dir', type='text', 
-                                            #                    value='/projects/b1119/ssg9761/POSYDON_hydro_debug/1e+00_Zsun/LBV_wind+dedt_energy_eqn/lgTeff_test_5'),
-                                            #          daq.ToggleSwitch( id='comparison-toggle', value=False, size=30)
-                                            #         ], 
-                                            #         style={"display":"flex", 'padding-left':'80%', 'padding-bottom': '5%'}
-                                            #        ),
-                                            # slice plot                     
-                                            dcc.Loading(id = "slice-loading", type = 'cube',
-                                                        children=[html.Div( dcc.Graph(id='grid-slice-graph', figure={"layout":{"height":fig_height, "width":fig_width}}) )]
-                                                       )
-                                            ]),
-                                    # HRD plot
-                                    html.Div([dcc.Loading(
-                                                id = "evo-loading", type = 'cube', 
-                                                children=[html.Div( dcc.Graph(id='hrd-graph', figure={"layout":{"height":fig_height, "width":fig_width}}) )]
-                                                )
-                                            ])
-                                 ], 
-                                 style={"display":"flex", "gap":"5px", "align-items":"flex-end"}),
 
-                        # 2nd row of time series plots
-                        #html.Div([html.Div(children=[html.Label(['Star 1 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                        #                             dcc.Dropdown(id='star1-dropdown', style={'width': '50%'}),
-                        #                             dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star1-xaxis-type', inline=True),
-                        #                             dcc.Graph(id='star1-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}}),
-                        #                             html.Label(['Star 2 Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                        #                             dcc.Dropdown(id='star2-dropdown', style={'width': '50%'}),
-                        #                             dcc.RadioItems(['log Age', 'Model Number'], 'log Age', id='star2-xaxis-type', inline=True),
-                        #                             dcc.Graph(id='star2-timeseries', figure={"layout":{"height":fig_height*0.5, "width":fig_width*0.75}})
-                        #                            ]
-                        #                   ),
-                        #          html.Div(children=[html.Label(['Binary y-Data:'], style={'font-weight': 'bold', "text-align": "center"}), 
-                        #                             dcc.Dropdown(id='binary-y-dropdown', style={'width': '50%'}),
-                        #                             html.Label(['Binary x-Data:'], style={'font-weight': 'bold', "text-align": "center"}),
-                        #                             dcc.Dropdown(id='binary-x-dropdown', style={'width': '50%'}),
-                        #                             dcc.Checklist(['log-x', 'log-y', 'star 2'], id='binary-checklist', inline=True),
-                        #                             dcc.Graph(id='binary-plot', figure={"layout":{"height":fig_height, "width":fig_width}})
-                        #                            ]
-                        #                  )
-                        #         ], 
-                        #         style={"display":"flex", "gap":"150px", "align-items":"flex-end"})
-                        
-                      ])
+    html.Div([
+
+        # ---------------- LEFT: Slice plot ----------------
+        html.Div([
+            html.Div(
+                dcc.Slider(
+                    q_range.min(), 
+                    q_range.max(), 
+                    step=None, 
+                    marks={round(q,2): "" for q in q_range},
+                    value=q_range[0], 
+                    id='grid-slice-slider',
+                    tooltip={
+                        "placement": "top", 
+                        "always_visible": True,
+                        "template": "q\u00A0=\u00A0{value}",
+                        "style": {"color": "Black", "fontSize": "20px"}
+                    }
+                ), style={
+                    "width": "60%",
+                    "margin": "10px 50% 5px 100px",
+                    "height": "40px"
+                    #"border": "2px solid red"
+                }),
+
+                dcc.Loading(
+                id="slice-loading",
+                type='cube',
+                children=[
+                    html.Div(
+                        dcc.Graph(
+                            id='grid-slice-graph',
+                            style={"height": "100%", "width": "100%"}
+                        ),
+                        style={
+                            "flex": "1",
+                            "minWidth": 0,
+                            "overflow": "hidden"
+                        }
+                    )
+                ]
+            )
+
+        ],
+        style={
+            "margin": "0 auto",
+            #"paddingTop": "20px",
+            "display": "flex",
+            "flexDirection": "column",
+            "flex": "3",
+            "height": "90vh",
+            #"border": "2px solid red",
+            "justifyContent": "center"
+        }),
+
+        # ---------------- MIDDLE: CONTROL CARD ----------------
+        html.Div(
+            [
+
+                html.Div("Controls", style={
+                    "textAlign": "center",
+                    "fontWeight": "bold",
+                    "marginBottom": "6px"
+                }),
+
+                html.Div([
+                    html.Div("Star 1 Data:", style={"fontWeight": "bold", "marginBottom": "2px"}),
+                    dcc.Dropdown(id='star1-dropdown', style={"marginBottom": "4px"}),
+                    dcc.RadioItems(
+                        ['log Age', 'Model Number'],
+                        'log Age',
+                        id='star1-xaxis-type',
+                        style={"marginBottom": "8px"}
+                    ),
+                ]),
+
+                html.Div([
+                    html.Div("Star 2 Data:", style={"fontWeight": "bold", "marginBottom": "2px"}),
+                    dcc.Dropdown(id='star2-dropdown', style={"marginBottom": "4px"}),
+                    dcc.RadioItems(
+                        ['log Age', 'Model Number'],
+                        'log Age',
+                        id='star2-xaxis-type',
+                        style={"marginBottom": "8px"}
+                    ),
+                ]),
+
+                html.Div([
+                    html.Div("Binary Y:", style={"fontWeight": "bold", "marginBottom": "2px"}),
+                    dcc.Dropdown(id='binary-y-dropdown', style={"marginBottom": "6px"}),
+
+                    html.Div("Binary X:", style={"fontWeight": "bold", "marginBottom": "2px"}),
+                    dcc.Dropdown(id='binary-x-dropdown', style={"marginBottom": "6px"}),
+
+                    dcc.Checklist(
+                        ['log-x', 'log-y', 'star 2'],
+                        id='binary-checklist',
+                        style={"marginTop": "4px"}
+                    ),
+                ])
+
+            ],
+            style={
+                "padding": "8px 10px",
+                "border": "1px solid #ddd",
+                "borderRadius": "10px",
+                "boxShadow": "0 2px 6px rgba(0,0,0,0.08)",
+                "backgroundColor": "white",
+                "width": "100%",
+                "maxWidth": "280px",
+                "height": "auto",
+                "alignSelf": "center"
+            }
+        ),
+
+        # ---------------- RIGHT: 4 PANEL GRID ----------------
+        html.Div([
+
+            dcc.Loading(
+                id="evo-loading-1",
+                type='cube',
+                children=[
+                    dcc.Graph(id='hrd-graph', style={"height":"100%", "width":"100%"})
+                ]
+            ),
+
+            dcc.Loading(
+                id="evo-loading-2",
+                type='cube',
+                children=[
+                    dcc.Graph(id='star1-timeseries', style={"height":"100%", "width":"100%"})
+                ]
+            ),
+
+            dcc.Loading(
+                id="evo-loading-3",
+                type='cube',
+                children=[
+                    dcc.Graph(id='star2-timeseries', style={"height":"100%", "width":"100%"})
+                ]
+            ),
+
+            dcc.Loading(
+                id="evo-loading-4",
+                type='cube',
+                children=[
+                    dcc.Graph(id='binary-plot', style={"height":"100%", "width":"100%"})
+                ]
+            )
+
+        ],
+        style={
+            "flex": "3",
+            "display": "grid",
+            "gridTemplateColumns": "1fr 1fr",
+            "gridTemplateRows": "1fr 1fr",
+            "gap": "8px",
+            "height": "90vh",
+            "padding": "8px",
+            "minWidth": 0#,
+            #"border": "2px solid red"
+        }),
+
+    ],
+    style={
+        "display": "flex",
+        "height": "100vh",
+        "gap": "20px",
+        "padding": "10px"
+    })
+
+])
 
 # Callbacks
 @callback(
@@ -241,10 +352,10 @@ def highlight_on_click(clickData, current_fig):
 # Also update dropdown menu with available data columns
 @callback(
     Output('hrd-graph', 'figure'),
-    #Output('star1-dropdown', 'options'),
-    #Output('star2-dropdown', 'options'),
-    #Output('binary-x-dropdown', 'options'),
-    #Output('binary-y-dropdown', 'options'),
+    Output('star1-dropdown', 'options'),
+    Output('star2-dropdown', 'options'),
+    Output('binary-x-dropdown', 'options'),
+    Output('binary-y-dropdown', 'options'),
     Input('grid-slice-graph', 'clickData'),
     prevent_initial_call = True
 )
@@ -253,19 +364,19 @@ def load_and_plot_HRD(clickData):
     mesa_model.load_data()
 
     # plot HRD for selected model
-    f = HRD_on_click(mesa_model, fig_width=fig_width, fig_height=fig_height)
+    f = HRD_on_click(mesa_model, fig_width=fig_width/2, fig_height=fig_height/2)
         
-    return f#, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
+    return f, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
 
 
 # update star 1 time evo
-#@callback(
-#    Output('star1-timeseries', 'figure'),
-#    Input('star1-dropdown', 'value'),
-#    Input('star1-xaxis-type', 'value'),
-#    Input('star1-dropdown', 'options'),
-#    prevent_initial_call = True
-#)
+@callback(
+    Output('star1-timeseries', 'figure'),
+    Input('star1-dropdown', 'value'),
+    Input('star1-xaxis-type', 'value'),
+    Input('star1-dropdown', 'options'),
+    prevent_initial_call = True
+)
 def load_and_plot_click_data_pri(star1_y, star1_x, options):
     
     if star1_x == "log Age":
@@ -287,7 +398,7 @@ def load_and_plot_click_data_pri(star1_y, star1_x, options):
             
         f.update_layout(template='simple_white',
                             xaxis_type=xaxis_type,
-                            height=fig_height*0.75, width=fig_width*0.75)
+                            height=fig_height*0.5, width=fig_width*0.5)
 
         return f
         
@@ -295,13 +406,13 @@ def load_and_plot_click_data_pri(star1_y, star1_x, options):
         raise PreventUpdate
 
 # update star 2 time evo
-#@callback(
-#    Output('star2-timeseries', 'figure'),
-#    Input('star2-dropdown', 'value'),
-#    Input('star2-xaxis-type', 'value'),
-#    Input('star2-dropdown', 'options'),
-#    prevent_initial_call = True
-#)
+@callback(
+    Output('star2-timeseries', 'figure'),
+    Input('star2-dropdown', 'value'),
+    Input('star2-xaxis-type', 'value'),
+    Input('star2-dropdown', 'options'),
+    prevent_initial_call = True
+)
 def load_and_plot_click_data_sec(star2_y, star2_x, options):
     
     if star2_x == "log Age":
@@ -323,7 +434,7 @@ def load_and_plot_click_data_sec(star2_y, star2_x, options):
         
         f.update_layout(template='simple_white',
                         xaxis_type=xaxis_type,
-                        height=fig_height*0.75, width=fig_width*0.75)
+                        height=fig_height*0.5, width=fig_width*0.5)
 
         return f
         
@@ -331,14 +442,14 @@ def load_and_plot_click_data_sec(star2_y, star2_x, options):
         raise PreventUpdate
 
 # update binary time evo
-#@callback(
-#    Output('binary-plot', 'figure'),
-#    Input('binary-x-dropdown', 'value'),
-#    Input('binary-y-dropdown', 'value'),
-#    Input('binary-checklist', 'value'),
-#    Input('binary-x-dropdown', 'options'),
-#    prevent_initial_call = True
-#)
+@callback(
+    Output('binary-plot', 'figure'),
+    Input('binary-x-dropdown', 'value'),
+    Input('binary-y-dropdown', 'value'),
+    Input('binary-checklist', 'value'),
+    Input('binary-x-dropdown', 'options'),
+    prevent_initial_call = True
+)
 def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
 
     if log_options:
@@ -373,7 +484,7 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
         f.update_layout(template='simple_white',
                         xaxis_type=xaxis_type,
                         yaxis_type=yaxis_type,
-                        height=fig_height, width=fig_width)
+                        height=fig_height/2, width=fig_width/2)
 
         return f
         

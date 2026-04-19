@@ -199,10 +199,15 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
                         yaxis_title="log<sub>10</sub> L/L<sub>&#8857;</sub>", legend_title="",
                         height=fig_height, width=fig_width,
                         xaxis = dict(autorange="reversed"),
-                        legend=dict(x=0.05,
-                                    y=0.17,
-                                    xanchor="left",
-                                    yanchor="bottom",
+                        #legend=dict(x=0.05,
+                        #            y=0.17,
+                        #            xanchor="left",
+                        #            yanchor="bottom",
+                        #            font=dict(size=14)))
+                        legend=dict(x=0.98,
+                                    y=0.98,
+                                    xanchor="right",
+                                    yanchor="top",
                                     font=dict(size=14)))
         
         f.update_layout(xaxis = dict(
