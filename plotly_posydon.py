@@ -223,3 +223,70 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
                         )
     
         return f
+
+
+"""
+    # roche lobe plots
+        ax = axa[2]
+        q = bd['star_2_mass'] / bd['star_1_mass']
+        r_l2 = bd['rl_1'] * (0.784 * q**1.05 * np.exp(-0.188 * q) + 1.004)
+        d_l2 = bd['rl_1'] * (3.334 * q**0.514 * np.exp(-0.052 * q) + 1.308)
+        label = r'$\rm R_{L2,1}\ (Devina)$' if i == 0 else ''
+        ax.plot(x_bh, r_l2, lw = lw, c = s1color, ls='-.', label=label)
+        label = r'$\rm D_{L2,1}\ (Devina)$' if i == 0 else ''
+        ax.plot(x_bh, d_l2, lw = lw, c = s1color, ls='--', label=label)
+        ax.plot(x_bh, bd['star_1_radius'], lw = lw, c = s1color)
+        ax.scatter(x_bh[lbv_index_bh], bd['star_1_radius'][lbv_index_bh], edgecolor='k', 
+                   facecolor = 'pink', lw=2, marker = 'o', s = 100, zorder=2)
+        ax.plot(x_bh, bd['star_2_radius'], lw = lw, c = s2color)
+        label = r"$\rm R_{RL,1}$" if i == 0 else ''
+        ax.plot(x_bh, bd['rl_1'], lw = lw, c = s1color, ls = ':', label = label)
+        label = r"$\rm R_{RL,2}$" if i == 0 else ''
+        ax.plot(x_bh, bd['rl_2'], lw = lw, c = s2color, ls = ':', label = label)
+        label = r"$\rm a_{sep}$" if i == 0 else ''
+        sep_color = 'firebrick' if i == 0 else 'coral'
+        ax.plot(x_bh, bd['binary_separation'], c=sep_color, lw = lw, label=label)
+        r_lbv1 = np.array([np.inf if L <= 6e5 else 1e5/np.sqrt(L) for L in 10**d['log_L']])
+        r_lbv2 = np.array([np.inf if L <= 6e5 else 1e5/np.sqrt(L) for L in 10**d2['log_L']])
+        label = r'$\rm R_{LBV,1}$' if i == 0 else ''
+        ax.plot(x_h1, r_lbv1, lw = lw, c = s1color_alt, label=label)
+        label = r'$\rm R_{LBV,2}$' if i == 0 else ''
+        ax.plot(x_h2, r_lbv2, lw = lw, c = s2color_alt, label=label)
+"""
+
+"""
+    # envelope mass plot
+        ax = axa[3]
+        h_layer_mass = d['star_mass'] - d['he_core_mass']
+        he_layer_mass = d['he_core_mass'] - d['c_core_mass']
+        c_layer_mass = d['c_core_mass'] - d['o_core_mass']
+        o_layer_mass = d['o_core_mass']
+        ax.plot(x_h1, d['star_mass'], lw = lw, ls = '-', c=s1color, label = '')
+        #ax.plot(x_h1, h_layer_mass, lw = lw, ls = '--', c=s1color, label = 'H layer', alpha=alpha)
+        #ax.plot(x_h1, he_layer_mass, lw = lw, ls = '-.', c=s1color, label= 'He layer', alpha=alpha)
+        #ax.plot(x_h1, c_layer_mass, lw = lw, ls = ':', c=s1color, label= 'C layer', alpha=alpha)
+        #ax.plot(x_bh, transferred - accreted, lw = 3, label ='diff')
+        if i == 0:
+            ax.set_ylabel(r'$\rm \bf Envelope\ Mass\ [M_{\odot}]$', fontsize=ylabel_size, fontweight='bold')
+            ax.set_xlabel(xlabel, fontsize=xlabel_size, fontweight='bold')
+            #ax.fill_between(x_h1, d['star_mass']*0, d['star_mass'], ls = '-', lw=2,
+            #                facecolor='aquamarine', edgecolor=s1color, alpha=0.4, label="Star mass")
+            ax.fill_between(x_h1, o_layer_mass + c_layer_mass + he_layer_mass, 
+                            o_layer_mass + c_layer_mass + he_layer_mass + h_layer_mass, 
+                        edgecolor='none', facecolor='tab:orange',
+                        lw = lw, ls='-', alpha=0.4, label = 'H layer')
+            ax.fill_between(x_h1, o_layer_mass + c_layer_mass, o_layer_mass + c_layer_mass + he_layer_mass, 
+                            edgecolor=s1color, facecolor='none',
+                        lw = lw, ls='-', alpha=0.4, label = 'He layer', hatch='o')
+            ax.fill_between(x_h1, o_layer_mass, o_layer_mass + c_layer_mass, 
+                            edgecolor=s1color, facecolor='aquamarine',
+                        lw = lw, ls='-', alpha=0.4, label = 'C layer')
+            ax.fill_between(x_h1, o_layer_mass*0, o_layer_mass, edgecolor=s1color, facecolor='gold',
+                        lw = lw, ls='-', alpha=0.4, label = 'O layer')
+            ax.tick_params(axis='both', which='major', labelsize=major_tick_size)
+            ax.tick_params(axis='both', which='minor', labelsize=minor_tick_size)
+            ax.legend(loc='best', prop=dict(size=20), frameon=False)
+            ax.set_xlim(xlims_bh)
+            ax.set_xscale(xscale)
+            #ax.set_yscale('log')
+"""
