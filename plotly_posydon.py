@@ -9,6 +9,7 @@ from posydon.visualization.plot_defaults import (
 import plotly.express as px
 import plotly.graph_objects as go
 from ssh_io import available_comparison
+import textwrap
 
 marker_settings = DEFAULT_MARKERS_COLORS_LEGENDS['combined_TF12']
 symbol_map = {'D': 'diamond', 's': 'square', '.': 'circle', 'x': 'x'}
@@ -133,8 +134,8 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
                         y=0.5,
                         bordercolor='black',
                         borderwidth=0)
-            f.update_layout(template='simple_white',
-                        height=fig_height, width=fig_width)
+            #f.update_layout(template='simple_white',
+            #            height=fig_height, width=fig_width)
             return f
 
         porbi = mesa_model.porbi 
@@ -177,11 +178,12 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
         # don't show ZAMS markers in the legend
         f.for_each_trace(lambda trace: trace.update(showlegend=False) if (trace.name == "ZAMS") else trace.update(showlegend=True))
 
+        tf1_wrapped = "<br>".join(textwrap.wrap(mesa_model.tf1, width=40))
         # Add some text annotating the initial orbital config
         f.add_annotation(text='P<sub>orb,i</sub> = {:.2f} d <br>'.format(porbi) +\
                               'M<sub>1</sub> = {:.2f} M<sub>&#8857;</sub> <br>'.format(mdi)+\
                               'M<sub>2</sub> = {:.2f} M<sub>&#8857;</sub> <br>'.format(mai)+\
-                              'TF1: {:s} <br>'.format(mesa_model.tf1)+\
+                              'TF1: {:s} <br>'.format(tf1_wrapped)+\
                               'TF1 (alt.): {:s}'.format(mesa_model.alt_tf1), 
                         align='left',
                         showarrow=False,
@@ -197,7 +199,7 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
         f.update_layout(template='simple_white',
                         xaxis_title="log<sub>10</sub> T<sub>eff</sub>", 
                         yaxis_title="log<sub>10</sub> L/L<sub>&#8857;</sub>", legend_title="",
-                        height=fig_height, width=fig_width,
+                        #height=fig_height, width=fig_width,
                         xaxis = dict(autorange="reversed"),
                         #legend=dict(x=0.05,
                         #            y=0.17,
@@ -325,6 +327,20 @@ def layers_on_click(mesa_model, fig_width=1200, fig_height=800):
 
     return f
 
+def radii_on_click(mesa_model, id = 1, fig_width=1200, fig_height=800):
+
+    q = mesa_model.bdf["star_2_mass"] / mesa_model.bdf["star_1_mass"]
+    mesa_model.bdf[f"star_{id}_rL2"] = mesa_model.bdf[f"rl_{id}"] * (0.784 * q**1.05 * np.exp(-0.188 * q) + 1.004)
+
+    f = px.line(mesa_model.bdf, x="age", y=f"star_{id}_radius", 
+                custom_data=['age', f'star_{id}_mass']).update_traces(name='Star 1', line =dict(color='royalblue', width=3),
+                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
+
+    f.add_trace(px.line(mesa_model.bdf, x="age", y=f"star_{id}_rL2", 
+                custom_data=['age', f'star_{id}_mass']).update_traces(name='Star 2', line_color='orangered',
+                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+
+    return f
 
 """
     # roche lobe plots

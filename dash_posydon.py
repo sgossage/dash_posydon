@@ -17,7 +17,7 @@ from dash.exceptions import PreventUpdate
 import sys
 
 import plotly.graph_objects as go
-from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values, layers_on_click
+from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values, layers_on_click, radii_on_click
 from ssh_io import download_data_to_df
 
 fac = 1.0
@@ -185,32 +185,43 @@ app.layout = html.Div([
             dcc.Loading(
                 id="evo-loading-1",
                 type='cube',
+                parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='hrd-graph', style={"height":"100%", "width":"100%"})
+                    dcc.Graph(id='hrd-graph', 
+                              style={"height":"100%", "width":"100%", 
+                                     "outline": "1px dashed blue", "backgroundColor": "yellow"},
+                              #config={"responsive": True}
+                              )
                 ]
             ),
 
             dcc.Loading(
                 id="evo-loading-2",
                 type='cube',
+                parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='star1-timeseries', style={"height":"100%", "width":"100%"})
+                    dcc.Graph(id='star1-timeseries', style={"height":"100%", "width":"100%", "outline": "1px dashed blue", "backgroundColor": "yellow"},
+                              config={"responsive": True})
                 ]
             ),
 
             dcc.Loading(
                 id="evo-loading-3",
                 type='cube',
+                parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='star2-timeseries', style={"height":"100%", "width":"100%"})
+                    dcc.Graph(id='star2-timeseries', style={"height":"100%", "width":"100%", "outline": "1px dashed blue", "backgroundColor": "yellow"},
+                              config={"responsive": True})
                 ]
             ),
 
             dcc.Loading(
                 id="evo-loading-4",
                 type='cube',
+                parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='binary-plot', style={"height":"100%", "width":"100%"})
+                    dcc.Graph(id='binary-plot', style={"height":"100%", "width":"100%", "outline": "1px dashed blue", "backgroundColor": "yellow"},
+                              config={"responsive": True})
                 ]
             )
 
@@ -219,12 +230,11 @@ app.layout = html.Div([
             "flex": "3",
             "display": "grid",
             "gridTemplateColumns": "1fr 1fr",
-            "gridTemplateRows": "1fr 1fr",
-            "gap": "8px",
+            "gridTemplateRows": "minmax(0,1fr) minmax(0,1fr)",
+            "gap": "6px",
             "height": "90vh",
-            "padding": "8px",
-            "minWidth": 0#,
-            #"border": "2px solid red"
+            "padding": "6px",
+            "outline": "1px solid blue"
         }),
 
     ],
@@ -366,6 +376,10 @@ def load_and_plot_HRD(clickData):
     # plot HRD for selected model
     f = HRD_on_click(mesa_model, fig_width=fig_width/2, fig_height=fig_height/2)
         
+    #f.update_layout(margin=dict(l=0, r=0, t=0, b=0), autosize=True)
+    #f.update_xaxes(automargin=False)
+    #f.update_yaxes(automargin=False)
+
     return f, mesa_model.s1_df.columns, mesa_model.s2_df.columns, mesa_model.bdf.columns, mesa_model.bdf.columns
 
 
@@ -379,7 +393,6 @@ def load_and_plot_HRD(clickData):
 )
 def load_and_plot_click_data_pri(star1_y, star1_x, options):
     
-    """
     if star1_x == "log Age":
         star1_x = "star_age"
         xaxis_type = "log"
@@ -389,27 +402,29 @@ def load_and_plot_click_data_pri(star1_y, star1_x, options):
 
     if star1_y:
 
-        f = px.line(mesa_model.s1_df, x=star1_x, y=star1_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 1', line_color='royalblue',
-                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
+        f = px.line(mesa_model.s1_df, x=star1_x, y=star1_y, 
+                    custom_data=['star_age', 'star_mass']).update_traces(name='Star 1', line_color='royalblue',
+                    hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
             
         # plot comparison tracks if provided
         if not mesa_model.s1_compare_df.empty:
-            f.add_trace(px.line(mesa_model.s1_compare_df, x=star1_x, y=star1_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
-                            hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+            f.add_trace(px.line(mesa_model.s1_compare_df, x=star1_x, y=star1_y, 
+                        custom_data=['star_age', 'star_mass']).update_traces(name='Star 1 (alt.)', line =dict(color='magenta', width=1),
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
             
         f.update_layout(template='simple_white',
                             xaxis_type=xaxis_type,
-                            height=fig_height*0.5, width=fig_width*0.5)
+                        #    height=fig_height*0.5, width=fig_width*0.5
+                        )
 
         return f
         
     else:
         raise PreventUpdate
-    """
 
-    f = layers_on_click(mesa_model, fig_width=fig_width/2, fig_height=fig_height/2)
+    #f = layers_on_click(mesa_model, fig_width=fig_width/2, fig_height=fig_height/2)
 
-    return f
+    #return f
         
 # update star 2 time evo
 @callback(
@@ -430,22 +445,29 @@ def load_and_plot_click_data_sec(star2_y, star2_x, options):
 
     if star2_y:
 
-        f = px.line(mesa_model.s2_df, x=star2_x, y=star2_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 2', line_color='darkorange',
+        f = px.line(mesa_model.s2_df, x=star2_x, y=star2_y, 
+                    custom_data=['star_age', 'star_mass']).update_traces(name='Star 2', line_color='darkorange',
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
         
         # plot comparison tracks if provided
         if not mesa_model.s2_compare_df.empty:
-             f.add_trace(px.line(mesa_model.s2_compare_df, x=star2_x, y=star2_y, custom_data=['star_age', 'star_mass']).update_traces(name='Star 2 (alt.)', line =dict(color='orangered', width=1),
-                         hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+             f.add_trace(px.line(mesa_model.s2_compare_df, x=star2_x, y=star2_y, 
+                        custom_data=['star_age', 'star_mass']).update_traces(name='Star 2 (alt.)', line =dict(color='orangered', width=1),
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
         f.update_layout(template='simple_white',
                         xaxis_type=xaxis_type,
-                        height=fig_height*0.5, width=fig_width*0.5)
+                        #height=fig_height*0.5, width=fig_width*0.5
+                        )
 
         return f
         
     else:
         raise PreventUpdate
+
+    #f = radii_on_click(mesa_model, id = 1, fig_width=fig_width/2, fig_height=fig_height/2)
+
+    #return f    
 
 # update binary time evo
 @callback(
@@ -458,6 +480,7 @@ def load_and_plot_click_data_sec(star2_y, star2_x, options):
 )
 def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
 
+    
     if log_options:
         xaxis_type = 'log' if 'log-x' in log_options else 'linear'
         yaxis_type = 'log' if 'log-y' in log_options else 'linear'
@@ -467,35 +490,44 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
 
     if bin_x and bin_y:
 
-        f = px.line(mesa_model.bdf, x=bin_x, y=bin_y, custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line_color='royalblue',
+        f = px.line(mesa_model.bdf, x=bin_x, y=bin_y, 
+                    custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line_color='royalblue',
                     hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
         
         if log_options:
             if "star 2" in log_options and "1" in bin_y:
                 bin_y2 = bin_y.replace("1", "2")
-                f.add_trace(px.line(mesa_model.bdf, x=bin_x, y=bin_y2, custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='darkorange', width=1),
+                f.add_trace(px.line(mesa_model.bdf, x=bin_x, y=bin_y2, 
+                            custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='darkorange', width=1),
                             hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
         # plot comparison tracks if provided
         if not mesa_model.compare_bdf.empty:
-            f.add_trace(px.line(mesa_model.compare_bdf, x=bin_x, y=bin_y, custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='magenta', width=1),
-                         hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+            f.add_trace(px.line(mesa_model.compare_bdf, x=bin_x, y=bin_y, 
+                        custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='magenta', width=1),
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
              
             if log_options:
                 if "star 2" in log_options and "1" in bin_y:
                     bin_y2 = bin_y.replace("1", "2")
-                    f.add_trace(px.line(mesa_model.compare_bdf, x=bin_x, y=bin_y2, custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='orangered', width=1),
+                    f.add_trace(px.line(mesa_model.compare_bdf, x=bin_x, y=bin_y2, 
+                                custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='orangered', width=1),
                                 hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
         f.update_layout(template='simple_white',
                         xaxis_type=xaxis_type,
                         yaxis_type=yaxis_type,
-                        height=fig_height/2, width=fig_width/2)
+                        #height=fig_height/2, width=fig_width/2
+                        )
 
         return f
         
     else:
         raise PreventUpdate
+    
+    #f = radii_on_click(mesa_model, id = 2, fig_width=fig_width/2, fig_height=fig_height/2)
+
+    #return f
 
 # plot comparison highlights 
 #@callback(
