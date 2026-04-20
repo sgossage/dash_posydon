@@ -17,7 +17,7 @@ from dash.exceptions import PreventUpdate
 import sys
 
 import plotly.graph_objects as go
-from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values
+from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values, layers_on_click
 from ssh_io import download_data_to_df
 
 fac = 1.0
@@ -379,6 +379,7 @@ def load_and_plot_HRD(clickData):
 )
 def load_and_plot_click_data_pri(star1_y, star1_x, options):
     
+    """
     if star1_x == "log Age":
         star1_x = "star_age"
         xaxis_type = "log"
@@ -404,7 +405,12 @@ def load_and_plot_click_data_pri(star1_y, star1_x, options):
         
     else:
         raise PreventUpdate
+    """
 
+    f = layers_on_click(mesa_model, fig_width=fig_width/2, fig_height=fig_height/2)
+
+    return f
+        
 # update star 2 time evo
 @callback(
     Output('star2-timeseries', 'figure'),

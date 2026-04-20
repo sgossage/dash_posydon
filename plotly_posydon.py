@@ -224,6 +224,107 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
     
         return f
 
+def layers_on_click(mesa_model, fig_width=1200, fig_height=800):
+
+    mesa_model.s1_df["h_layer_mass"] = mesa_model.s1_df["star_mass"] - mesa_model.s1_df["he_core_mass"]
+    mesa_model.s1_df["he_layer_mass"] = mesa_model.s1_df["he_core_mass"] - mesa_model.s1_df["c_core_mass"]
+    mesa_model.s1_df["c_layer_mass"] = mesa_model.s1_df["c_core_mass"] - mesa_model.s1_df["o_core_mass"]
+    mesa_model.s1_df["o_layer_mass"] = mesa_model.s1_df["o_core_mass"]
+
+    mesa_model.s1_df["h_layer_bot"] = mesa_model.s1_df["o_layer_mass"] + mesa_model.s1_df["c_layer_mass"] + mesa_model.s1_df["he_layer_mass"]
+    mesa_model.s1_df["h_layer_top"] = mesa_model.s1_df["o_layer_mass"] + mesa_model.s1_df["c_layer_mass"] + mesa_model.s1_df["he_layer_mass"] + mesa_model.s1_df["h_layer_mass"]
+    mesa_model.s1_df["he_layer_bot"] = mesa_model.s1_df["o_layer_mass"] + mesa_model.s1_df["c_layer_mass"]
+    mesa_model.s1_df["he_layer_top"] = mesa_model.s1_df["o_layer_mass"] + mesa_model.s1_df["c_layer_mass"] + mesa_model.s1_df["he_layer_mass"]
+    mesa_model.s1_df["c_layer_bot"] = mesa_model.s1_df["o_layer_mass"]
+    mesa_model.s1_df["c_layer_top"] = mesa_model.s1_df["o_layer_mass"] + mesa_model.s1_df["c_layer_mass"]
+    mesa_model.s1_df["o_layer_bot"] = 0.0
+    mesa_model.s1_df["o_layer_top"] = mesa_model.s1_df["o_layer_mass"]
+
+
+    f = go.Figure()
+
+    f.add_trace(go.Scatter(
+        x=mesa_model.s1_df["star_age"],
+        y=mesa_model.s1_df["h_layer_bot"],
+        mode="lines",
+        line=dict(color="orange", width=3),
+        showlegend=False
+    ))
+
+    f.add_trace(go.Scatter(
+        x=mesa_model.s1_df["star_age"],
+        y=mesa_model.s1_df["h_layer_top"],
+        mode="lines",
+        name="H layer",
+        line=dict(color="orange", width=3),
+        fill="tonexty",
+        fillcolor="rgba(255,165,0,0.2)",  # semi-transparent orange
+        customdata=mesa_model.s1_df[["star_age", "h_layer_mass"]],
+        hovertemplate="Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.3f} M<sub>&#8857;</sub>"
+    ))
+
+    f.add_trace(go.Scatter(
+        x=mesa_model.s1_df["star_age"],
+        y=mesa_model.s1_df["he_layer_bot"],
+        mode="lines",
+        line=dict(color="royalblue", width=3),
+        showlegend=False
+    ))
+    
+    f.add_trace(go.Scatter(
+        x=mesa_model.s1_df["star_age"],
+        y=mesa_model.s1_df["he_layer_top"],
+        mode="lines",
+        name="He layer",
+        line=dict(color="royalblue", width=3),
+        fill="tonexty",
+        fillcolor="rgba(65,105,225,0.2)",  # semi-transparent royalblue
+        customdata=mesa_model.s1_df[["star_age", "he_layer_mass"]],
+        hovertemplate="Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.3f} M<sub>&#8857;</sub>"
+    ))
+
+    f.add_trace(go.Scatter(
+        x=mesa_model.s1_df["star_age"],
+        y=mesa_model.s1_df["c_layer_bot"],
+        mode="lines",
+        line=dict(color="goldenrod", width=3),
+        showlegend=False
+    ))
+    
+    f.add_trace(go.Scatter(
+        x=mesa_model.s1_df["star_age"],
+        y=mesa_model.s1_df["c_layer_top"],
+        mode="lines",
+        name="C layer",
+        line=dict(color="goldenrod", width=3),
+        fill="tonexty",
+        fillcolor="rgba(255,215,0,0.2)",  # semi-transparent gold
+        customdata=mesa_model.s1_df[["star_age", "c_layer_mass"]],
+        hovertemplate="Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.3f} M<sub>&#8857;</sub>"
+    ))
+
+    f.add_trace(go.Scatter(
+        x=mesa_model.s1_df["star_age"],
+        y=mesa_model.s1_df["o_layer_bot"],
+        mode="lines",
+        line=dict(color="cyan", width=3),
+        showlegend=False
+    ))
+    
+    f.add_trace(go.Scatter(
+        x=mesa_model.s1_df["star_age"],
+        y=mesa_model.s1_df["o_layer_top"],
+        mode="lines",
+        name="O layer",
+        line=dict(color="cyan", width=3),
+        fill="tonexty",
+        fillcolor="rgba(255,215,0,0.2)",  # semi-transparent gold
+        customdata=mesa_model.s1_df[["star_age", "o_layer_mass"]],
+        hovertemplate="Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.3f} M<sub>&#8857;</sub>"
+    ))
+
+    return f
+
 
 """
     # roche lobe plots
