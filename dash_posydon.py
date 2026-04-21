@@ -30,8 +30,8 @@ q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/mnt/d/Research/POSYDON_GRIDS_v2/HMS-HMS/1e-04_Zsun/LITE/grid_random_combined_rerun7b_LBV_wind+dedt_hepulse_NOCSTOP.h5"
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HMS/1e+00_Zsun.h5"
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
-gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
-#gpath = "/home/sethg/Research/Downloads/POSYDON_grids/rerun/grid_vlm_exp_rerun_fdm_limit_combined_processed.h5"
+#gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
+gpath = "/home/sethg/Research/Downloads/POSYDON_grids/rerun/grid_vlm_exp_rerun_fdm_limit_combined_processed.h5"
 #gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
@@ -85,13 +85,14 @@ app.layout = html.Div([
                 ), style={
                     "width": "60%",
                     "margin": "10px 50% 5px 100px",
-                    "height": "40px"
-                    #"border": "2px solid red"
+                    "height": "40px",
+                    "border": "2px solid red"
                 }),
 
                 dcc.Loading(
                 id="slice-loading",
                 type='cube',
+                #parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
                     html.Div(
                         dcc.Graph(
@@ -101,7 +102,8 @@ app.layout = html.Div([
                         style={
                             "flex": "1",
                             "minWidth": 0,
-                            "overflow": "hidden"
+                            "overflow": "hidden",
+                            "outline":"2px solid blue"
                         }
                     )
                 ]
@@ -116,7 +118,9 @@ app.layout = html.Div([
             "flex": "3",
             "height": "90vh",
             #"border": "2px solid red",
-            "justifyContent": "center"
+            "justifyContent": "center",
+            "outline": "1px solid green",
+            "padding":"6px"
         }),
 
         # ---------------- MIDDLE: CONTROL CARD ----------------
@@ -175,7 +179,8 @@ app.layout = html.Div([
                 "width": "100%",
                 "maxWidth": "280px",
                 "height": "auto",
-                "alignSelf": "center"
+                "alignSelf": "center",
+                "outline": "1px solid blue"
             }
         ),
 
@@ -200,8 +205,11 @@ app.layout = html.Div([
                 type='cube',
                 parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='star1-timeseries', style={"height":"100%", "width":"100%", "outline": "1px dashed blue", "backgroundColor": "yellow"},
-                              config={"responsive": True})
+                    dcc.Graph(id='star1-timeseries', 
+                              style={"height":"100%", "width":"100%", 
+                                     "outline": "1px dashed blue", "backgroundColor": "yellow"},
+                              #config={"responsive": True}
+                              )
                 ]
             ),
 
@@ -210,8 +218,11 @@ app.layout = html.Div([
                 type='cube',
                 parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='star2-timeseries', style={"height":"100%", "width":"100%", "outline": "1px dashed blue", "backgroundColor": "yellow"},
-                              config={"responsive": True})
+                    dcc.Graph(id='star2-timeseries', 
+                              style={"height":"100%", "width":"100%", 
+                                     "outline": "1px dashed blue", "backgroundColor": "yellow"},
+                              #config={"responsive": True}
+                              )
                 ]
             ),
 
@@ -220,8 +231,11 @@ app.layout = html.Div([
                 type='cube',
                 parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='binary-plot', style={"height":"100%", "width":"100%", "outline": "1px dashed blue", "backgroundColor": "yellow"},
-                              config={"responsive": True})
+                    dcc.Graph(id='binary-plot', 
+                              style={"height":"100%", "width":"100%", 
+                                     "outline": "1px dashed blue", "backgroundColor": "yellow"},
+                              #config={"responsive": True}
+                              )
                 ]
             )
 
@@ -242,7 +256,8 @@ app.layout = html.Div([
         "display": "flex",
         "height": "100vh",
         "gap": "20px",
-        "padding": "10px"
+        "padding": "10px",
+        "outline": "1px solid red"
     })
 
 ])
