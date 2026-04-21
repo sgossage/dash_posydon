@@ -237,6 +237,50 @@ app.layout = html.Div([
                               #config={"responsive": True}
                               )
                 ]
+            ),
+            dcc.Loading(
+                id="evo-loading-5",
+                type='cube',
+                parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
+                children=[
+                    dcc.Graph(id='s1-layer-plot', 
+                              style={"height":"100%", "width":"100%", 
+                                     "outline": "1px dashed blue", "backgroundColor": "yellow"}
+                              )
+                ]
+            ),
+            dcc.Loading(
+                id="evo-loading-6",
+                type='cube',
+                parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
+                children=[
+                    dcc.Graph(id='s2-layer-plot', 
+                              style={"height":"100%", "width":"100%", 
+                                     "outline": "1px dashed blue", "backgroundColor": "yellow"}
+                              )
+                ]
+            ),
+            dcc.Loading(
+                id="evo-loading-7",
+                type='cube',
+                parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
+                children=[
+                    dcc.Graph(id='s1-radii-plot', 
+                              style={"height":"100%", "width":"100%", 
+                                     "outline": "1px dashed blue", "backgroundColor": "yellow"}
+                              )
+                ]
+            ),
+            dcc.Loading(
+                id="evo-loading-8",
+                type='cube',
+                parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
+                children=[
+                    dcc.Graph(id='s2-radii-plot', 
+                              style={"height":"100%", "width":"100%", 
+                                     "outline": "1px dashed blue", "backgroundColor": "yellow"}
+                              )
+                ]
             )
 
         ],
@@ -244,7 +288,8 @@ app.layout = html.Div([
             "flex": "3",
             "display": "grid",
             "gridTemplateColumns": "1fr 1fr",
-            "gridTemplateRows": "minmax(0,1fr) minmax(0,1fr)",
+            #"gridTemplateRows": "minmax(0,1fr) minmax(0,1fr)",
+            "gridTemplateRows": "repeat(4, minmax(0, 1fr))",
             "gap": "6px",
             "height": "90vh",
             "padding": "6px",
@@ -543,6 +588,67 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
     #f = radii_on_click(mesa_model, id = 2, fig_width=fig_width/2, fig_height=fig_height/2)
 
     #return f
+
+# update star 1 time evo
+@callback(
+    Output('s1-layer-plot', 'figure'),
+    #Input('layer-plot', 'id'),
+    Input('star1-dropdown', 'value'),
+    Input('star1-xaxis-type', 'value'),
+    Input('star1-dropdown', 'options'),
+    prevent_initial_call = True
+)
+def layer_plot_on_click_pri(*_):
+
+    f = layers_on_click(mesa_model.s1_df, fig_width=fig_width/2, fig_height=fig_height/2)
+
+    return f
+
+# update star 1 time evo
+@callback(
+    Output('s2-layer-plot', 'figure'),
+    #Input('layer-plot', 'id'),
+    Input('star2-dropdown', 'value'),
+    Input('star2-xaxis-type', 'value'),
+    Input('star2-dropdown', 'options'),
+    prevent_initial_call = True
+)
+def layer_plot_on_click_sec(*_):
+
+    f = layers_on_click(mesa_model.s2_df, fig_width=fig_width/2, fig_height=fig_height/2)
+
+    return f
+
+# update star 1 time evo
+@callback(
+    Output('s1-radii-plot', 'figure'),
+    #Input('layer-plot', 'id'),
+    Input('star1-dropdown', 'value'),
+    Input('star1-xaxis-type', 'value'),
+    Input('star1-dropdown', 'options'),
+    prevent_initial_call = True
+)
+def radii_plot_on_click_pri(*_):
+
+    f = radii_on_click(mesa_model, id = 1, fig_width=fig_width/2, fig_height=fig_height/2)
+
+    return f
+
+# update star 1 time evo
+@callback(
+    Output('s2-radii-plot', 'figure'),
+    #Input('layer-plot', 'id'),
+    Input('star2-dropdown', 'value'),
+    Input('star2-xaxis-type', 'value'),
+    Input('star2-dropdown', 'options'),
+    prevent_initial_call = True
+)
+def radii_plot_on_click_sec(*_):
+
+    f = radii_on_click(mesa_model, id = 2, fig_width=fig_width/2, fig_height=fig_height/2)
+
+    return f
+
 
 # plot comparison highlights 
 #@callback(
