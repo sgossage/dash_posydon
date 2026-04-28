@@ -164,7 +164,7 @@ app.layout = html.Div([
                     dcc.Dropdown(id='binary-x-dropdown', style={"marginBottom": "6px"}),
 
                     dcc.Checklist(
-                        ['log-x', 'log-y', 'both stars'],
+                        ['log-x', 'log-y', 'both stars', 'abs(y)'],
                         id='binary-checklist',
                         style={"marginTop": "4px"}
                     ),
@@ -537,64 +537,106 @@ def load_and_plot_click_data_sec(star2_y, star2_x, options):
     Input('binary-y-dropdown', 'value'),
     Input('binary-checklist', 'value'),
     Input('binary-x-dropdown', 'options'),
-    prevent_initial_call = True
+    prevent_initial_call=True
 )
 def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
 
-    
-    if log_options:
-        xaxis_type = 'log' if 'log-x' in log_options else 'linear'
-        yaxis_type = 'log' if 'log-y' in log_options else 'linear'
-    else:
-        xaxis_type = 'linear'
-        yaxis_type = 'linear'
-
-    if bin_x and bin_y:
-
-        if "_1" in bin_y:
-            f = px.line(mesa_model.bdf, x=bin_x, y=bin_y, 
-                        custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line_color='royalblue',
-                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
-        elif "_2" in bin_y:
-            f = px.line(mesa_model.bdf, x=bin_x, y=bin_y, 
-                        custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line_color='darkorange',
-                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[2]:.2f} M<sub>&#8857;</sub>')
-        
-        if log_options:
-            if "both stars" in log_options and "_1" in bin_y:
-                bin_y2 = bin_y.replace("1", "2")
-                f.add_trace(px.line(mesa_model.bdf, x=bin_x, y=bin_y2, 
-                            custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='darkorange', width=1),
-                            hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[2]:.2f} M<sub>&#8857;</sub>').data[0])
-            elif "both stars" in log_options and "_2" in bin_y:
-                bin_y2 = bin_y.replace("2", "1")
-                f.add_trace(px.line(mesa_model.bdf, x=bin_x, y=bin_y2, 
-                            custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='royalblue', width=1),
-                            hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
-        
-        # plot comparison tracks if provided
-        if not mesa_model.compare_bdf.empty:
-            f.add_trace(px.line(mesa_model.compare_bdf, x=bin_x, y=bin_y, 
-                        custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='magenta', width=1),
-                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
-             
-            if log_options:
-                if "star 2" in log_options and "1" in bin_y:
-                    bin_y2 = bin_y.replace("1", "2")
-                    f.add_trace(px.line(mesa_model.compare_bdf, x=bin_x, y=bin_y2, 
-                                custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='orangered', width=1),
-                                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
-        
-        f.update_layout(template='simple_white',
-                        xaxis_type=xaxis_type,
-                        yaxis_type=yaxis_type,
-                        #height=fig_height/2, width=fig_width/2
-                        )
-
-        return f
-        
-    else:
+    if not (bin_x and bin_y):
         raise PreventUpdate
+
+    # --- safe defaults ---
+    log_options = log_options or []
+
+    xaxis_type = 'log' if 'log-x' in log_options else 'linear'
+    yaxis_type = 'log' if 'log-y' in log_options else 'linear'
+
+    df = mesa_model.bdf
+
+    # --- helper: transform y ---
+    def get_y(dataframe, col):
+        y = dataframe[col]
+        if "abs(y)" in log_options:
+            y = y.abs()
+        return y
+
+    # --- determine stars ---
+    def get_star(col):
+        return 1 if "_1" in col else 2 if "_2" in col else None
+
+    def get_other(col):
+        if "_1" in col:
+            return col.replace("1", "2")
+        elif "_2" in col:
+            return col.replace("2", "1")
+        return None
+
+    # --- styling ---
+    color_map = {1: 'royalblue', 2: 'darkorange'}
+    mass_idx = {1: 1, 2: 2}
+
+    # --- build figure ---
+    f = px.line()  # empty figure
+
+    # which columns to plot
+    cols = [bin_y]
+    if "both stars" in log_options:
+        other = get_other(bin_y)
+        if other:
+            cols.append(other)
+
+    # --- main tracks ---
+    for col in cols:
+        star = get_star(col)
+        y_vals = get_y(df, col)
+
+        f.add_trace(
+            px.line(
+                df,
+                x=bin_x,
+                y=y_vals,
+                custom_data=['age', 'star_1_mass', 'star_2_mass']
+            ).update_traces(
+                line=dict(color=color_map.get(star, 'black'), width=1),
+                hovertemplate=(
+                    'Age: %{customdata[0]:.3e} yrs <br>'
+                    f'Mass: %{{customdata[{mass_idx.get(star,1)}]:.2f}} '
+                    'M<sub>&#8857;</sub>'
+                )
+            ).data[0]
+        )
+
+    # --- comparison tracks ---
+    if not mesa_model.compare_bdf.empty:
+        dfc = mesa_model.compare_bdf
+
+        for col in cols:
+            star = get_star(col)
+            y_vals = get_y(dfc, col)
+
+            f.add_trace(
+                px.line(
+                    dfc,
+                    x=bin_x,
+                    y=y_vals,
+                    custom_data=['age', 'star_1_mass', 'star_2_mass']
+                ).update_traces(
+                    line=dict(color='magenta', width=1),
+                    hovertemplate=(
+                        'Age: %{customdata[0]:.3e} yrs <br>'
+                        f'Mass: %{{customdata[{mass_idx.get(star,1)}]:.2f}} '
+                        'M<sub>&#8857;</sub>'
+                    )
+                ).data[0]
+            )
+
+    # --- layout ---
+    f.update_layout(
+        template='simple_white',
+        xaxis_type=xaxis_type,
+        yaxis_type=yaxis_type,
+    )
+
+    return f
     
     #f = radii_on_click(mesa_model, id = 2, fig_width=fig_width/2, fig_height=fig_height/2)
 
