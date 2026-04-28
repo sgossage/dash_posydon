@@ -31,7 +31,8 @@ q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HMS/1e+00_Zsun.h5"
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
 #gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
-gpath = "/home/sethg/Research/Downloads/POSYDON_grids/rerun/grid_vlm_exp_rerun_fdm_limit_combined_processed.h5"
+#gpath = "/home/sethg/Research/Downloads/POSYDON_grids/rerun/grid_vlm_exp_rerun_fdm_limit_combined_processed.h5"
+gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_mb_combined.h5"
 #gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
@@ -163,7 +164,7 @@ app.layout = html.Div([
                     dcc.Dropdown(id='binary-x-dropdown', style={"marginBottom": "6px"}),
 
                     dcc.Checklist(
-                        ['log-x', 'log-y', 'star 2'],
+                        ['log-x', 'log-y', 'both stars'],
                         id='binary-checklist',
                         style={"marginTop": "4px"}
                     ),
@@ -550,15 +551,25 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
 
     if bin_x and bin_y:
 
-        f = px.line(mesa_model.bdf, x=bin_x, y=bin_y, 
-                    custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line_color='royalblue',
-                    hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
+        if "_1" in bin_y:
+            f = px.line(mesa_model.bdf, x=bin_x, y=bin_y, 
+                        custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line_color='royalblue',
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
+        elif "_2" in bin_y:
+            f = px.line(mesa_model.bdf, x=bin_x, y=bin_y, 
+                        custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line_color='darkorange',
+                        hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[2]:.2f} M<sub>&#8857;</sub>')
         
         if log_options:
-            if "star 2" in log_options and "1" in bin_y:
+            if "both stars" in log_options and "_1" in bin_y:
                 bin_y2 = bin_y.replace("1", "2")
                 f.add_trace(px.line(mesa_model.bdf, x=bin_x, y=bin_y2, 
                             custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='darkorange', width=1),
+                            hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[2]:.2f} M<sub>&#8857;</sub>').data[0])
+            elif "both stars" in log_options and "_2" in bin_y:
+                bin_y2 = bin_y.replace("2", "1")
+                f.add_trace(px.line(mesa_model.bdf, x=bin_x, y=bin_y2, 
+                            custom_data=['age', 'star_1_mass', 'star_2_mass']).update_traces(line =dict(color='royalblue', width=1),
                             hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
         
         # plot comparison tracks if provided
