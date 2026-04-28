@@ -569,6 +569,26 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
         elif "_2" in col:
             return col.replace("2", "1")
         return None
+    
+    def get_hovertemplate_str(star, include_other):
+        main_idx = mass_idx.get(star, 1)
+        other_star = 2 if main_idx == 1 else 1
+        other_idx = mass_idx.get(other_star, 1)
+
+        string = (
+            'Age: %{customdata[0]:.3e} yrs <br>'
+            f'M<sub>{main_idx}</sub>: %{{customdata[{main_idx}]:.2f}} '
+            'M<sub>&#8857;</sub>'
+        )
+
+        if include_other:
+            string += (
+                '<br>'
+                f'M<sub>{other_star}</sub>: %{{customdata[{other_idx}]:.2f}} '
+                'M<sub>&#8857;</sub>'
+            )
+
+        return string
 
     # --- styling ---
     color_map = {1: 'royalblue', 2: 'darkorange'}
@@ -583,6 +603,8 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
         other = get_other(bin_y)
         if other:
             cols.append(other)
+    else:
+        other = None
 
     # --- main tracks ---
     for col in cols:
@@ -597,11 +619,12 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
                 custom_data=['age', 'star_1_mass', 'star_2_mass']
             ).update_traces(
                 line=dict(color=color_map.get(star, 'black'), width=1),
-                hovertemplate=(
-                    'Age: %{customdata[0]:.3e} yrs <br>'
-                    f'Mass: %{{customdata[{mass_idx.get(star,1)}]:.2f}} '
-                    'M<sub>&#8857;</sub>'
-                )
+                #hovertemplate=(
+                #    'Age: %{customdata[0]:.3e} yrs <br>'
+                #    f'Mass: %{{customdata[{mass_idx.get(star,1)}]:.2f}} '
+                #    'M<sub>&#8857;</sub>'
+                #)
+                hovertemplate = get_hovertemplate_str(star, include_other="both stars" not in log_options)
             ).data[0]
         )
 
