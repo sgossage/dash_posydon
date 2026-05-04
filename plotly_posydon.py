@@ -59,8 +59,9 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_wid
                                         legendgroup= marker_settings[t.name][3]) )
     
     f.update_layout(template='simple_white',
-                    xaxis_title="log<sub>10</sub> M<sub>1</sub>/M<sub>&#8857;</sub>", 
-                    yaxis_title="log<sub>10</sub> P<sub>orb</sub>/days", legend_title="Termination Flags",
+                    xaxis_title="log<sub>10</sub>(M<sub>1</sub>) [M<sub>&#8857;</sub>]", 
+                    yaxis_title="log<sub>10</sub>(P<sub>orb</sub>) [days]", 
+                    legend_title="Termination Flags",
                     height=fig_height, width=fig_width,
                     margin={'t':0,'l':0,'b':0,'r':0}, 
                     #font=dict(size=18),
@@ -197,9 +198,10 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
         
         # set aesthetics
         f.update_layout(template='simple_white',
-                        xaxis_title="log<sub>10</sub> T<sub>eff</sub>", 
-                        yaxis_title="log<sub>10</sub> L/L<sub>&#8857;</sub>", legend_title="",
+                        xaxis_title="log<sub>10</sub>(T<sub>eff</sub>) [K]", 
+                        yaxis_title="log<sub>10</sub>(L) [L<sub>&#8857;</sub>]", legend_title="",
                         #height=fig_height, width=fig_width,
+                        margin={'t':0,'l':0,'b':0,'r':0},
                         xaxis = dict(autorange="reversed"),
                         #legend=dict(x=0.05,
                         #            y=0.17,
@@ -325,6 +327,15 @@ def layers_on_click(star_df, fig_width=1200, fig_height=800):
         hovertemplate="Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.3f} M<sub>&#8857;</sub>"
     ))
 
+    f.update_layout(template='simple_white',
+                    xaxis_title="log<sub>10</sub>(Age) [yrs]", 
+                    yaxis_title="log<sub>10</sub>(M) [M<sub>&#8857;</sub>]",
+                    #height=fig_height, width=fig_width,
+                    margin={'t':0,'l':0,'b':0,'r':0}, 
+                    #font=dict(size=18),
+                    legend=dict(font=dict(size=14))
+                   )
+
     return f
 
 def radii_on_click(mesa_model, id = 1, fig_width=1200, fig_height=800):
@@ -339,6 +350,15 @@ def radii_on_click(mesa_model, id = 1, fig_width=1200, fig_height=800):
     f.add_trace(px.line(mesa_model.bdf, x="age", y=f"star_{id}_rL2", 
                 custom_data=['age', f'star_{id}_mass']).update_traces(name='Star 2', line_color='orangered',
                 hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+    
+    f.update_layout(template='simple_white',
+                    xaxis_title="log<sub>10</sub>(Age) [yrs]", 
+                    yaxis_title="R [R<sub>&#8857;</sub>]",
+                    #height=fig_height, width=fig_width,
+                    margin={'t':0,'l':0,'b':0,'r':0}, 
+                    #font=dict(size=18),
+                    legend=dict(font=dict(size=14))
+                   )
 
     return f
 

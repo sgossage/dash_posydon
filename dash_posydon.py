@@ -32,8 +32,9 @@ q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
 #gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
 #gpath = "/home/sethg/Research/Downloads/POSYDON_grids/rerun/grid_vlm_exp_rerun_fdm_limit_combined_processed.h5"
-gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_mb_combined.h5"
-#gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
+
+#gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_mb_combined.h5"
+gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
 
@@ -288,8 +289,9 @@ app.layout = html.Div([
         style={
             "flex": "3",
             "display": "grid",
+            #"gridTemplateColumns": "minmax(0,1fr)",
             "gridTemplateColumns": "1fr 1fr",
-            #"gridTemplateRows": "minmax(0,1fr) minmax(0,1fr)",
+            #"gridTemplateRows": "minmax(0,1fr)",
             "gridTemplateRows": "repeat(4, minmax(0, 1fr))",
             "gap": "6px",
             "height": "90vh",
