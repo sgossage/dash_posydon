@@ -26,8 +26,8 @@ def get_IF_values(grid_path):
     grid = PSyGrid()
     grid.load(grid_path)
 
-    iv = pd.DataFrame(grid.initial_values)
-    fv = pd.DataFrame(grid.final_values)
+    iv = grid.initial_values.to_df()
+    fv = grid.final_values.to_df()
     iv = iv.assign(mesa_dir=[ mdir.decode("utf-8") for mdir in grid.MESA_dirs])
     iv = iv.assign(grid_index=[ mdir.decode("utf-8").split("index_")[-1] for mdir in grid.MESA_dirs])
     iv = iv.assign(termination_flag_1=[ tf1 for tf1 in fv['termination_flag_1'].values])
