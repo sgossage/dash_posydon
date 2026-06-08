@@ -59,8 +59,9 @@ def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_wid
                                         legendgroup= marker_settings[t.name][3]) )
     
     f.update_layout(template='simple_white',
-                    xaxis_title="log<sub>10</sub> M<sub>1</sub>/M<sub>&#8857;</sub>", 
-                    yaxis_title="log<sub>10</sub> P<sub>orb</sub>/days", legend_title="Termination Flags",
+                    xaxis_title="log<sub>10</sub>(M<sub>1</sub>) [M<sub>&#8857;</sub>]", 
+                    yaxis_title="log<sub>10</sub>(P<sub>orb</sub>) [days]", 
+                    legend_title="Termination Flags",
                     height=fig_height, width=fig_width,
                     margin={'t':0,'l':0,'b':0,'r':0}, 
                     #font=dict(size=18),
@@ -197,9 +198,10 @@ def HRD_on_click(mesa_model, fig_width=1200, fig_height=800):
         
         # set aesthetics
         f.update_layout(template='simple_white',
-                        xaxis_title="log<sub>10</sub> T<sub>eff</sub>", 
-                        yaxis_title="log<sub>10</sub> L/L<sub>&#8857;</sub>", legend_title="",
+                        xaxis_title="log<sub>10</sub>(T<sub>eff</sub>) [K]", 
+                        yaxis_title="log<sub>10</sub>(L) [L<sub>&#8857;</sub>]", legend_title="",
                         #height=fig_height, width=fig_width,
+                        margin={'t':0,'l':0,'b':0,'r':0},
                         xaxis = dict(autorange="reversed"),
                         #legend=dict(x=0.05,
                         #            y=0.17,
@@ -327,7 +329,7 @@ def layers_on_click(star_df, fig_width=1200, fig_height=800):
 
     f.update_layout(template='simple_white',
                         xaxis_title="age [yr]", 
-                        yaxis_title="Mass of layer [M<sub>&#8857;</sub>]", legend_title="",)
+                        yaxis_title="Mass of layer [M<sub>&#8857;</sub>]")
 
     return f
 
