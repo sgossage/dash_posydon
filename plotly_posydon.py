@@ -325,20 +325,41 @@ def layers_on_click(star_df, fig_width=1200, fig_height=800):
         hovertemplate="Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.3f} M<sub>&#8857;</sub>"
     ))
 
+    f.update_layout(template='simple_white',
+                        xaxis_title="age [yr]", 
+                        yaxis_title="Mass of layer [M<sub>&#8857;</sub>]", legend_title="",)
+
     return f
 
 def radii_on_click(mesa_model, id = 1, fig_width=1200, fig_height=800):
+
+    if id == 1:
+        line_color = 'royalblue'
+    else:
+        line_color = 'darkorange'
 
     q = mesa_model.bdf["star_2_mass"] / mesa_model.bdf["star_1_mass"]
     mesa_model.bdf[f"star_{id}_rL2"] = mesa_model.bdf[f"rl_{id}"] * (0.784 * q**1.05 * np.exp(-0.188 * q) + 1.004)
 
     f = px.line(mesa_model.bdf, x="age", y=f"star_{id}_radius", 
-                custom_data=['age', f'star_{id}_mass']).update_traces(name='Star 1', line =dict(color='royalblue', width=3),
-                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
+                custom_data=['age', f'star_{id}_radius']).update_traces(name='R', line =dict(color=line_color, width=3),
+                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
+
+    f.add_trace(px.line(mesa_model.bdf, x="age", y=f"rl_{id}", 
+                custom_data=['age', f'rl_{id}']).update_traces(name='R<sub>L1</sub>', line_color='peru',
+                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R<sub>L1</sub>: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
 
     f.add_trace(px.line(mesa_model.bdf, x="age", y=f"star_{id}_rL2", 
-                custom_data=['age', f'star_{id}_mass']).update_traces(name='Star 2', line_color='orangered',
-                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> Mass: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+                custom_data=['age', f"star_{id}_rL2"]).update_traces(name='R<sub>L2</sub>', line_color='sienna',
+                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R<sub>L2</sub>: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+    f.update_traces(showlegend=True)
+    #f.update_layout(template='simple_white',
+    #                legend_title="",
+    #                legend=dict(x=0.98,
+    #                            y=0.98,
+    #                            xanchor="right",
+    #                            yanchor="top",
+    #                            font=dict(size=14)))
 
     return f
 
