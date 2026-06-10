@@ -32,7 +32,7 @@ q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
 #gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
 #gpath = "/home/sethg/Research/Downloads/POSYDON_grids/rerun/grid_vlm_exp_rerun_fdm_limit_combined_processed.h5"
-gpath = "/home/sethg/Research/Downloads/grid_vlm_exp_mb_combined.h5"
+gpath = "/home/sethg/Research/Quest/grid_vlm_exp_mb_combined.h5"
 #gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
@@ -206,7 +206,7 @@ app.layout = html.Div([
                 type='cube',
                 parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='star1-timeseries', 
+                    dcc.Graph(id='binary-plot', 
                               style={"height":"100%", "width":"100%", 
                                      "outline": "1px dashed blue", "backgroundColor": "yellow"},
                               #config={"responsive": True}
@@ -219,7 +219,7 @@ app.layout = html.Div([
                 type='cube',
                 parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='star2-timeseries', 
+                    dcc.Graph(id='star1-timeseries', 
                               style={"height":"100%", "width":"100%", 
                                      "outline": "1px dashed blue", "backgroundColor": "yellow"},
                               #config={"responsive": True}
@@ -232,7 +232,7 @@ app.layout = html.Div([
                 type='cube',
                 parent_style={"height":"100%", "width":"100%", "display":"block", "outline": "1px solid red"},
                 children=[
-                    dcc.Graph(id='binary-plot', 
+                    dcc.Graph(id='star2-timeseries', 
                               style={"height":"100%", "width":"100%", 
                                      "outline": "1px dashed blue", "backgroundColor": "yellow"},
                               #config={"responsive": True}
