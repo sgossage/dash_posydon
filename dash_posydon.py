@@ -619,7 +619,7 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
                 y=y_vals,
                 custom_data=['age', 'star_1_mass', 'star_2_mass']
             ).update_traces(
-                line=dict(color=color_map.get(star, 'black'), width=1),
+                line=dict(color=color_map.get(star, 'black')),
                 #hovertemplate=(
                 #    'Age: %{customdata[0]:.3e} yrs <br>'
                 #    f'Mass: %{{customdata[{mass_idx.get(star,1)}]:.2f}} '
@@ -644,7 +644,7 @@ def load_and_plot_click_data_bin(bin_x, bin_y, log_options, options):
                     y=y_vals,
                     custom_data=['age', 'star_1_mass', 'star_2_mass']
                 ).update_traces(
-                    line=dict(color='magenta', width=1),
+                    line=dict(color='magenta'),
                     hovertemplate=(
                         'Age: %{customdata[0]:.3e} yrs <br>'
                         f'Mass: %{{customdata[{mass_idx.get(star,1)}]:.2f}} '

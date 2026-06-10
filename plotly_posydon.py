@@ -355,7 +355,7 @@ def radii_on_click(mesa_model, id = 1, fig_width=1200, fig_height=800):
                 custom_data=['age', f"star_{id}_rL2"]).update_traces(name='R<sub>L2</sub>', line_color='sienna',
                 hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R<sub>L2</sub>: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
     f.update_traces(showlegend=True)
-    #f.update_layout(template='simple_white',
+    f.update_layout(template='simple_white')#,
     #                legend_title="",
     #                legend=dict(x=0.98,
     #                            y=0.98,
