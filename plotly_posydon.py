@@ -12,7 +12,7 @@ from ssh_io import available_comparison
 import textwrap
 
 marker_settings = DEFAULT_MARKERS_COLORS_LEGENDS['combined_TF12']
-symbol_map = {'D': 'diamond', 's': 'square', '.': 'circle', 'x': 'x'}
+symbol_map = {'D': 'diamond', 's': 'square', '.': 'circle', 'x': 'x', '+': 'cross'}
 
 def color_convert(c):
     if c == "tab:olive":
@@ -33,10 +33,36 @@ def get_IF_values(grid_path):
     iv = grid.initial_values.to_df()
     fv = grid.final_values.to_df()
     iv = iv.assign(mesa_dir=[ mdir.decode("utf-8") for mdir in grid.MESA_dirs])
-    iv = iv.assign(grid_index=[ mdir.decode("utf-8").split("index_")[-1] for mdir in grid.MESA_dirs])
+    #iv = iv.assign(grid_index=[ mdir.decode("utf-8").split("index_")[-1] for mdir in grid.MESA_dirs])
+    iv = iv.assign(grid_index=[idx for idx in range(len(grid.MESA_dirs))])
     iv = iv.assign(termination_flag_1=[ tf1 for tf1 in fv['termination_flag_1'].values])
 
     return iv, fv
+
+def get_local_data(grid_path, index):
+
+    grid = PSyGrid(grid_path)
+    bh = pd.DataFrame(grid[index]['binary_history'])
+    h1 = pd.DataFrame(grid[index]['history1'])
+    h2 = pd.DataFrame(grid[index]['history2'])
+
+    h1['star_age'] = bh['age']
+    h1['star_mass'] = bh['star_1_mass']
+    h2['star_age'] = bh['age']
+    h2['star_mass'] = bh['star_2_mass']
+
+    bh['rl_1'] = eval_rlobe(bh['binary_separation'], bh['star_1_mass'], bh['star_2_mass'])
+    bh['rl_2'] = eval_rlobe(bh['binary_separation'], bh['star_2_mass'], bh['star_1_mass'])
+    bh['star_1_radius'] = 10**h1['log_R']
+    bh['star_2_radius'] = 10**h2['log_R']
+
+    return bh, h1, h2
+
+def eval_rlobe(a, m1, m2):
+    q = m1 / m2
+    # Eggleton 1983 formula for Roche lobe radius
+    rl = a * (0.49 * q**(2/3)) / (0.6 * q**(2/3) + np.log(1 + q**(1/3)))
+    return rl
 
 def dash_plot2D(q, iv, fv, compare_dir=None, highlight_comparisons=True, fig_width=1200, fig_height=800):
     
@@ -341,19 +367,21 @@ def radii_on_click(mesa_model, id = 1, fig_width=1200, fig_height=800):
         line_color = 'darkorange'
 
     q = mesa_model.bdf["star_2_mass"] / mesa_model.bdf["star_1_mass"]
-    mesa_model.bdf[f"star_{id}_rL2"] = mesa_model.bdf[f"rl_{id}"] * (0.784 * q**1.05 * np.exp(-0.188 * q) + 1.004)
+    f_low = 0.784 * q**1.05 * np.exp(-0.188 * q) + 1.004
+    f_high = 0.29066811 * q**0.82788069 * np.exp(-0.01572339 * q) + 1.36176161
+    mesa_model.bdf[f"star_{id}_rL2"] = mesa_model.bdf[f"rl_{id}"] * np.where(q < 1, f_low, f_high)
 
     f = px.line(mesa_model.bdf, x="age", y=f"star_{id}_radius", 
                 custom_data=['age', f'star_{id}_radius']).update_traces(name='R', line =dict(color=line_color, width=3),
-                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R: %{customdata[1]:.2f} M<sub>&#8857;</sub>')
+                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R: %{customdata[1]:.2f} R<sub>&#8857;</sub>')
 
     f.add_trace(px.line(mesa_model.bdf, x="age", y=f"rl_{id}", 
                 custom_data=['age', f'rl_{id}']).update_traces(name='R<sub>L1</sub>', line_color='peru',
-                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R<sub>L1</sub>: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R<sub>L1</sub>: %{customdata[1]:.2f} R<sub>&#8857;</sub>').data[0])
 
     f.add_trace(px.line(mesa_model.bdf, x="age", y=f"star_{id}_rL2", 
                 custom_data=['age', f"star_{id}_rL2"]).update_traces(name='R<sub>L2</sub>', line_color='sienna',
-                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R<sub>L2</sub>: %{customdata[1]:.2f} M<sub>&#8857;</sub>').data[0])
+                hovertemplate='Age: %{customdata[0]:.3e} yrs <br> R<sub>L2</sub>: %{customdata[1]:.2f} R<sub>&#8857;</sub>').data[0])
     f.update_traces(showlegend=True)
     f.update_layout(template='simple_white')#,
     #                legend_title="",

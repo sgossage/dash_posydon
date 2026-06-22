@@ -17,7 +17,7 @@ from dash.exceptions import PreventUpdate
 import sys
 
 import plotly.graph_objects as go
-from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values, layers_on_click, radii_on_click
+from plotly_posydon import dash_plot2D, HRD_on_click, get_IF_values, layers_on_click, radii_on_click, get_local_data
 from ssh_io import download_data_to_df
 
 fac = 1.0
@@ -32,7 +32,8 @@ q_range = np.arange(0.05, 1.05, 0.05)
 #gpath = "/home/sethg/Research/POSYDON_GRIDS_v3/sparse_test/CO-HeMS_vflag_rerun/grid_low_res_combined_vflag_rerun.h5"
 #gpath = "/home/sethg/Research/Downloads/POSYDON_grids/grid_vlm_exp_combined.h5"
 #gpath = "/home/sethg/Research/Downloads/POSYDON_grids/rerun/grid_vlm_exp_rerun_fdm_limit_combined_processed.h5"
-gpath = "/home/sethg/Research/Quest/grid_vlm_exp_mb_combined.h5"
+gpath = "/home/sethg/Research/Downloads/grid_vlm_exp_mb_combined.h5"
+#gpath = "/home/sethg/Research/Downloads/grid_vlm_exp_mb_wd_acc_combined.h5"
 #gpath = os.path.join(PATH_TO_POSYDON_DATA, "HMS-HMS/1e-04_Zsun.h5")
 compare_dir = ""
 iv, fv = get_IF_values(gpath)
@@ -48,13 +49,22 @@ class MESA_model:
         self.porbi = clickData["points"][0]["y"]
         self.mdi = clickData["points"][0]["x"]
         self.mai = clickData["points"][0]["customdata"][0]
+        self.grid_index = int(clickData["points"][0]["customdata"][2])
+        self.tf1 = clickData["points"][0]["customdata"][3]
 
 
-    def load_data(self):
+    def load_data(self, local=True):
         mesa_dir = self.mesa_dir
         print(mesa_dir)
-        self.s1_df, self.s2_df, self.bdf, self.tf1 = download_data_to_df(mesa_dir)
-        self.s1_compare_df, self.s2_compare_df, self.compare_bdf, self.alt_tf1 = download_data_to_df(mesa_dir, self.compare_dir)
+
+        if not local:
+            self.s1_df, self.s2_df, self.bdf, self.tf1 = download_data_to_df(mesa_dir)
+            self.s1_compare_df, self.s2_compare_df, self.compare_bdf, self.alt_tf1 = download_data_to_df(mesa_dir, self.compare_dir)
+        else:
+            print("!!!!!! ~~~~ DEBUG:", self.grid_index)
+            self.bdf, self.s1_df, self.s2_df = get_local_data(gpath, self.grid_index)
+            self.s1_compare_df, self.s2_compare_df, self.compare_bdf = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+
 
 
 mesa_model = MESA_model(compare_dir)
@@ -757,4 +767,4 @@ def set_compare_dir(value):
 
 if __name__ == "__main__":
     # Run the app
-    app.run(port=sys.argv[1], debug=True)
+    app.run(port=sys.argv[1], debug=False)
